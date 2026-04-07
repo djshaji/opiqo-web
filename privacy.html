@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Opiqo Privacy Policy — No data collection, no ads, no tracking. All audio processing happens locally on your device." />
+  <title>Privacy Policy — Opiqo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .privacy-hero {
+      padding: calc(var(--navbar-h) + 4rem) 0 3rem;
+      text-align: center;
+    }
+    .privacy-hero__eyebrow {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      background: rgba(255,107,43,.1);
+      border: 1px solid rgba(255,107,43,.25);
+      border-radius: 999px;
+      padding: .25rem .85rem;
+      margin-bottom: 1rem;
+    }
+    .privacy-hero__title {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: .75rem;
+    }
+    .privacy-hero__meta {
+      font-size: .875rem;
+      color: var(--color-muted);
+    }
+
+    .privacy-summary {
+      background: linear-gradient(135deg, rgba(255,107,43,.08) 0%, rgba(255,159,28,.05) 100%);
+      border: 1px solid rgba(255,107,43,.2);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      margin-bottom: 3rem;
+    }
+    .privacy-summary__title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .75rem;
+    }
+    .privacy-summary__text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--color-text);
+    }
+
+    .privacy-note {
+      background: var(--color-surface);
+      border-left: 3px solid var(--color-accent);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+      font-size: .975rem;
+      line-height: 1.7;
+      color: var(--color-muted);
+    }
+    .privacy-note em {
+      color: var(--color-text);
+      font-style: normal;
+    }
+
+    .privacy-body {
+      max-width: 760px;
+      margin: 0 auto;
+      padding-bottom: 5rem;
+    }
+    .policy-section {
+      margin-bottom: 2.75rem;
+    }
+    .policy-section__title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: .75rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .policy-section__text {
+      font-size: .975rem;
+      line-height: 1.8;
+      color: var(--color-muted);
+      margin-bottom: .75rem;
+    }
+    .policy-list {
+      list-style: none;
+      padding: 0;
+      margin: .5rem 0 0;
+    }
+    .policy-list li {
+      position: relative;
+      padding-left: 1.4rem;
+      font-size: .975rem;
+      line-height: 1.75;
+      color: var(--color-muted);
+      margin-bottom: .35rem;
+    }
+    .policy-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: .65em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-accent);
+    }
+    .policy-link {
+      color: var(--color-accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .policy-link:hover {
+      color: var(--color-accent2);
+    }
+
+    .privacy-footer-note {
+      text-align: center;
+      padding: 2.5rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      font-size: .975rem;
+      color: var(--color-muted);
+      line-height: 1.7;
+      margin-bottom: 4rem;
+    }
+    .privacy-footer-note strong {
+      color: var(--color-text);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="index.html" class="navbar__logo" aria-label="Opiqo home">
+        <span class="logo-icon" aria-hidden="true">🎸</span>
+        <span class="logo-text">opiqo</span>
+      </a>
+      <nav class="navbar__nav" id="navMenu" aria-label="Main navigation">
+        <a href="index.html#features" class="nav-link">Features</a>
+        <a href="index.html#platforms" class="nav-link">Platforms</a>
+        <a href="index.html#plugins" class="nav-link">Plugins</a>
+        <a href="index.html#how-it-works" class="nav-link">How It Works</a>
+        <a href="index.html#download" class="nav-link nav-link--cta">Download</a>
+      </nav>
+      <button class="navbar__hamburger" id="hamburgerBtn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <!-- Hero -->
+      <div class="privacy-hero">
+        <span class="privacy-hero__eyebrow">Legal</span>
+        <h1 class="privacy-hero__title">Privacy Policy</h1>
+        <p class="privacy-hero__meta">Effective date: April 7, 2026 &nbsp;·&nbsp; Opiqo for Android, Windows &amp; Linux</p>
+      </div>
+
+      <div class="privacy-body">
+
+        <!-- TL;DR summary -->
+        <div class="privacy-summary">
+          <p class="privacy-summary__title">TL;DR — The Short Version</p>
+          <p class="privacy-summary__text">
+            Opiqo processes all audio <strong>locally on your device</strong>. It does not send your
+            recordings, presets, or usage data to any remote server. There is
+            absolutely no data collection, no advertising, no analytics, and no
+            crash-reporting SDK in this app.
+          </p>
+        </div>
+
+        <!-- Personal note -->
+        <div class="privacy-note">
+          <em>I am one of the old-school developers from the era before everything was a subscription.</em>
+          I built Opiqo to be a simple way for guitarists like me to use these plugins and get amazing tones.
+          This app is for the guitarist struggling to find that first gig — I feel you. Keep on rocking.
+          All audio processing and file handling happens locally on your device. You can inspect the
+          <a class="policy-link" href="https://github.com/djshaji/opiqo-multi" target="_blank" rel="noopener noreferrer">open-source code on GitHub</a>
+          to see exactly how the app works.
+        </div>
+
+        <!-- 1. Overview -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">1. Overview</h2>
+          <p class="policy-section__text">
+            Opiqo is an LV2 plugin host and guitar effects processor. It requests microphone access
+            through the <code>RECORD_AUDIO</code> permission so it can capture input audio for live
+            processing and recording. The app does not include advertising SDKs, analytics SDKs, or
+            crash-reporting SDKs.
+          </p>
+        </div>
+
+        <!-- 2. Information the App Can Access -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">2. Information the App Can Access</h2>
+          <ul class="policy-list">
+            <li>Microphone audio — when you grant microphone permission and start audio processing or recording.</li>
+            <li>Files you explicitly choose — through Android's document picker for preset import or plugin-related file selection.</li>
+            <li>Files created by the app — such as recordings and saved presets stored on your device.</li>
+          </ul>
+        </div>
+
+        <!-- 3. Why Microphone Access Is Requested -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">3. Why Microphone Access Is Requested</h2>
+          <p class="policy-section__text">
+            Opiqo is a guitar and audio effects processor. Microphone access is required so the app can
+            capture input audio, pass it through the LV2 effects chain, and optionally record the
+            processed output. Without this permission, the core audio-processing features will not work.
+          </p>
+        </div>
+
+        <!-- 4. How Audio and Files Are Handled -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">4. How Audio and Files Are Handled</h2>
+          <ul class="policy-list">
+            <li>Audio is processed locally on the device through the app's native C++ engine.</li>
+            <li>Recordings are stored on-device in the format you choose (WAV, FLAC, MP3, Opus, OGG Vorbis).</li>
+            <li>Presets are stored locally and can be exported to a JSON file when you initiate an export.</li>
+            <li>Imported presets are read from a file you select and copied into the app's presets directory for immediate use.</li>
+            <li>Plugin-related files you select may be copied into the app's internal storage so the associated LV2 plugin can reference them.</li>
+          </ul>
+        </div>
+
+        <!-- 5. Data Sharing -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">5. Data Sharing</h2>
+          <p class="policy-section__text">
+            Opiqo does not send your audio recordings, presets, or usage data to any remote service as
+            part of normal operation. If you export files, those files go to the location you choose
+            using your device's system file picker — no intermediary server is involved.
+          </p>
+        </div>
+
+        <!-- 6. Third-Party Components -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">6. Third-Party Components</h2>
+          <p class="policy-section__text">
+            Opiqo uses the following third-party open-source libraries to support local audio processing
+            and LV2 hosting. None of these components transmit data externally on behalf of this app:
+          </p>
+          <ul class="policy-list">
+            <li><strong>Google Oboe</strong> — low-latency audio API for Android</li>
+            <li><strong>Lilv, Serd, Sord, Sratom, Zix</strong> — LV2 plugin discovery and hosting</li>
+            <li><strong>JACK components</strong> — audio connectivity (Linux)</li>
+          </ul>
+          <p class="policy-section__text" style="margin-top:.75rem;">
+            This policy does not replace their own licenses or documentation.
+          </p>
+        </div>
+
+        <!-- 7. Open-Source Transparency -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">7. Open-Source Transparency</h2>
+          <p class="policy-section__text">
+            Opiqo is open source and released under the MIT License. You can inspect the full
+            implementation at
+            <a class="policy-link" href="https://github.com/djshaji/opiqo-multi" target="_blank" rel="noopener noreferrer">github.com/djshaji/opiqo-multi</a>.
+            If the app's behavior changes in future releases, this policy will be updated to reflect those changes.
+          </p>
+        </div>
+
+        <!-- 8. Your Choices -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">8. Your Choices</h2>
+          <ul class="policy-list">
+            <li>You can deny microphone permission, although core audio-processing features will not work without it.</li>
+            <li>You choose whether to record audio, export presets, import presets, or select plugin-related files.</li>
+            <li>You can remove recordings or exported files from your device using your normal file-management tools.</li>
+          </ul>
+        </div>
+
+        <!-- 9. Changes to This Policy -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">9. Changes to This Policy</h2>
+          <p class="policy-section__text">
+            This page will be updated if the app's permissions, data flows, or third-party services
+            change. For the latest project status, review the repository and release notes on
+            <a class="policy-link" href="https://github.com/djshaji/opiqo-multi" target="_blank" rel="noopener noreferrer">GitHub</a>.
+          </p>
+        </div>
+
+        <!-- 10. Contact -->
+        <div class="policy-section">
+          <h2 class="policy-section__title">10. Contact</h2>
+          <p class="policy-section__text">
+            For questions, bug reports, or privacy-related concerns about Opiqo, please use the
+            <a class="policy-link" href="https://github.com/djshaji/opiqo-multi/issues" target="_blank" rel="noopener noreferrer">issue tracker on GitHub</a>.
+          </p>
+        </div>
+
+        <!-- Closing note -->
+        <div class="privacy-footer-note">
+          Made with ❤️ by <strong>djshaji</strong> — no data collection, no ads, just a love for guitar
+          tones and open-source software. If you have any questions or want to chat about the project,
+          feel free to reach out on
+          <a class="policy-link" href="https://github.com/djshaji" target="_blank" rel="noopener noreferrer">GitHub</a>.
+        </div>
+
+      </div><!-- /privacy-body -->
+    </div><!-- /container -->
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="index.html" class="navbar__logo" aria-label="Opiqo home">
+          <span class="logo-icon" aria-hidden="true">🎸</span>
+          <span class="logo-text">opiqo</span>
+        </a>
+        <p class="footer__tagline">Professional LV2 Guitar Effects for Every Platform.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer navigation">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Product</h4>
+          <a href="index.html#features" class="footer__link">Features</a>
+          <a href="index.html#platforms" class="footer__link">Platforms</a>
+          <a href="index.html#plugins" class="footer__link">Plugins</a>
+          <a href="index.html#download" class="footer__link">Download</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Resources</h4>
+          <a href="index.html#download" class="footer__link">Documentation</a>
+          <a href="https://github.com/djshaji/opiqo-multi" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/djshaji/opiqo-multi/issues" class="footer__link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Community</h4>
+          <a href="https://lv2plug.in/" class="footer__link" target="_blank" rel="noopener noreferrer">LV2 Spec</a>
+          <a href="https://jackaudio.org/" class="footer__link" target="_blank" rel="noopener noreferrer">JACK Audio</a>
+          <a href="https://github.com/google/oboe" class="footer__link" target="_blank" rel="noopener noreferrer">Google Oboe</a>
+          <a href="privacy.html" class="footer__link">Privacy Policy</a>
+        </div>
+      </nav>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>© 2026 Opiqo. Released under the <a href="https://github.com/djshaji/opiqo-multi/blob/main/LICENSE" class="link" target="_blank" rel="noopener noreferrer">MIT License</a>. Made with ♥ for mobile and desktop audio enthusiasts.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
