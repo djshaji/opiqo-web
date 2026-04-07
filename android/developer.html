@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Opiqo Android Developer Guide — Architecture, project structure, JNI bridge, LV2 plugin integration, build instructions, Oboe audio pipeline, and UI components." />
+  <meta property="og:title" content="Opiqo Android Developer Guide" />
+  <meta property="og:description" content="Complete developer documentation for the Opiqo Android implementation. Architecture, source layout, JNI bridge, LV2 integration, Oboe audio, and build instructions." />
+  <meta property="og:type" content="website" />
+  <title>Opiqo Android — Developer Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .dev-section { padding: 4rem 0; }
+    .dev-section + .dev-section { border-top: 1px solid rgba(148,163,184,.12); }
+    .arch-diagram { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 2rem; text-align: center; font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; font-size: .85rem; line-height: 1.9; color: var(--text-secondary, #94a3b8); white-space: pre; overflow-x: auto; }
+    .file-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+    .file-table th { text-align: left; padding: .75rem 1rem; background: rgba(34,197,94,.08); color: #4ade80; font-size: .85rem; font-weight: 600; border-bottom: 1px solid rgba(148,163,184,.12); }
+    .file-table td { padding: .75rem 1rem; border-bottom: 1px solid rgba(148,163,184,.08); color: var(--text-secondary, #94a3b8); font-size: .85rem; vertical-align: top; }
+    .file-table td code { font-size: .82rem; background: rgba(34,197,94,.07); padding: .1rem .35rem; border-radius: 4px; color: #86efac; }
+    .dev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .req-card { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem; }
+    .req-card h3 { color: var(--text-primary, #f1f5f9); font-size: 1rem; font-weight: 700; margin: 0 0 1rem; }
+    .req-card ul { margin: 0; padding-left: 1.15rem; color: var(--text-secondary, #94a3b8); font-size: .88rem; line-height: 2; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: .25rem .65rem; border-radius: 20px; font-size: .78rem; font-weight: 600; }
+    .badge--green { background: rgba(34,197,94,.12); color: #4ade80; }
+    .badge--blue { background: rgba(59,130,246,.12); color: #60a5fa; }
+    .badge--sky { background: rgba(14,165,233,.1); color: #38bdf8; }
+    .toc { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 3rem; }
+    .toc h2 { font-size: 1rem; font-weight: 700; color: var(--text-primary, #f1f5f9); margin: 0 0 .75rem; }
+    .toc ol { margin: 0; padding-left: 1.25rem; }
+    .toc li { margin: .3rem 0; }
+    .toc a { color: #4ade80; text-decoration: none; font-size: .9rem; }
+    .toc a:hover { text-decoration: underline; }
+    .tree { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; font-size: .82rem; line-height: 1.85; color: var(--text-secondary, #94a3b8); background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem 2rem; overflow-x: auto; }
+    .tree .hl { color: #4ade80; }
+    .note { background: rgba(34,197,94,.06); border-left: 3px solid #4ade80; border-radius: 0 8px 8px 0; padding: .75rem 1.25rem; margin: 1.25rem 0; color: var(--text-secondary, #94a3b8); font-size: .9rem; line-height: 1.7; }
+    .note strong { color: #4ade80; }
+    .warn { background: rgba(234,179,8,.06); border-left: 3px solid #eab308; border-radius: 0 8px 8px 0; padding: .75rem 1.25rem; margin: 1.25rem 0; color: var(--text-secondary, #94a3b8); font-size: .9rem; line-height: 1.7; }
+    .warn strong { color: #eab308; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+        <span class="logo-icon" aria-hidden="true">🎸</span>
+        <span class="logo-text">opiqo</span>
+      </a>
+      <nav class="navbar__nav" id="navMenu" aria-label="Main navigation">
+        <a href="index.html" class="nav-link">Android</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#source-layout" class="nav-link">Source</a>
+        <a href="#build" class="nav-link">Build</a>
+        <a href="https://github.com/djshaji/opiqo-android" class="nav-link nav-link--cta" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <button class="navbar__hamburger" id="hamburgerBtn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="hero" style="padding-bottom: 2rem;">
+      <div class="container hero__inner">
+        <div class="hero__text">
+          <span class="hero__badge">Developer Guide · Android</span>
+          <h1 class="hero__title">Opiqo Android<br /><span class="gradient-text">Developer Guide</span></h1>
+          <p class="hero__sub">Complete technical documentation for the Opiqo Android port — a professional-grade LV2 guitar multi-effects host for Android 12+ using Google Oboe and native C++ DSP. Covers project structure, JNI bridge, Oboe audio pipeline, LV2 plugin integration, atom messaging, and build system.</p>
+          <div class="hero__ctas">
+            <a href="https://play.google.com/store/apps/details?id=org.acoustixaudio.opiqo.multi" class="btn btn--primary" target="_blank" rel="noopener noreferrer">
+              <svg class="btn__icon" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.38.07 2.33.74 3.13.8 1.19-.24 2.33-.93 3.6-.84 1.53.12 2.68.72 3.44 1.84-3.13 1.87-2.38 5.98.48 7.13-.57 1.39-1.32 2.76-2.65 3.95zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Google Play
+            </a>
+            <a href="https://github.com/djshaji/opiqo-android" class="btn btn--secondary" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+            <a href="index.html" class="btn btn--secondary">Android Project Page</a>
+          </div>
+          <div class="badge-row" style="margin-top: 1.5rem;">
+            <span class="badge badge--green">Android 12+</span>
+            <span class="badge badge--green">Google Oboe v1.10</span>
+            <span class="badge badge--green">Android NDK</span>
+            <span class="badge badge--blue">Java + C++17</span>
+            <span class="badge badge--blue">CMake 3.22.1+</span>
+            <span class="badge badge--blue">Gradle 8.0+</span>
+            <span class="badge badge--sky">LV2 / Lilv</span>
+            <span class="badge badge--sky">MIT License</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TABLE OF CONTENTS ===== -->
+    <section style="padding: 1rem 0 2rem;">
+      <div class="container">
+        <div class="toc">
+          <h2>Table of Contents</h2>
+          <ol>
+            <li><a href="#overview">Project Overview</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#source-layout">Project Structure</a></li>
+            <li><a href="#audio-pipeline">Audio Processing Pipeline</a></li>
+            <li><a href="#lv2">LV2 Plugin Integration</a></li>
+            <li><a href="#jni">JNI Bridge</a></li>
+            <li><a href="#ui">UI Components</a></li>
+            <li><a href="#presets">Preset Management</a></li>
+            <li><a href="#permissions">Permissions</a></li>
+            <li><a href="#adding-plugins">Adding New LV2 Plugins</a></li>
+            <li><a href="#build">Build System</a></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== OVERVIEW ===== -->
+    <section class="dev-section" id="overview">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§1</span>
+          <h2 class="section__title">Project Overview</h2>
+        </div>
+        <p style="color: var(--text-secondary, #94a3b8); max-width: 760px; line-height: 1.8;">
+          Opiqo is a professional Guitar Multi-Effects Processor for Android that hosts and runs LV2 plugins in real time. The app provides a swipeable 4-pedal UI, full-duplex low-latency audio via Google Oboe, and support for 54 bundled guitar effects out of the box. The C++ DSP core (<code>LiveEffectEngine</code>, <code>LV2Plugin</code>, <code>FileWriter</code>) is shared verbatim with the Windows and Linux builds.
+        </p>
+        <div class="dev-grid reveal" style="margin-top: 1.5rem;">
+          <div class="req-card">
+            <h3>Core Capabilities</h3>
+            <ul>
+              <li>Floating-point precision audio processing</li>
+              <li>32-bit WAV / FLAC lossless recording</li>
+              <li>Full LV2 plugin host via Lilv</li>
+              <li>Real-time audio I/O via Google Oboe</li>
+              <li>4 independent LV2 plugin slots</li>
+              <li>LV2 buf-size specification compliant</li>
+              <li>Multi-ABI: arm64-v8a, armeabi-v7a, x86, x86_64</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Recording Formats</h3>
+            <ul>
+              <li>WAV (32-bit, lossless)</li>
+              <li>FLAC (lossless)</li>
+              <li>MP3</li>
+              <li>Opus</li>
+              <li>OGG Vorbis</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Key External Libraries</h3>
+            <ul>
+              <li>Google Oboe v1.10.0 — low-latency audio</li>
+              <li>JACK (<code>libjack</code>) — LV2 host utilities</li>
+              <li>Lilv — LV2 plugin discovery and loading</li>
+              <li>Sord — RDF triple store</li>
+              <li>Sratom — Atom/RDF serialization</li>
+              <li>nlohmann/json — preset serialization</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ARCHITECTURE ===== -->
+    <section class="dev-section" id="architecture">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§2</span>
+          <h2 class="section__title">Architecture</h2>
+          <p class="section__desc">The app is cleanly separated into three layers. Only the top two are Android-specific; the DSP core is shared across all platforms.</p>
+        </div>
+
+        <div class="arch-diagram reveal">┌────────────────────────────────────────────────────────┐
+│                    Java UI Layer                        │
+│  MainActivity, SettingsActivity, CollectionFragment,   │
+│  CollectionAdapter, ObjectFragment, UI.java             │
+│  Thread: Android UI / main thread                      │
+└──────────────────────────┬─────────────────────────────┘
+                           │  JNI calls (jni_bridge.cpp)
+┌──────────────────────────▼─────────────────────────────┐
+│               Android Audio Platform Layer              │
+│  LiveEffectEngine (Oboe FullDuplexPass)                 │
+│  multi.cpp — JNI-callable entry points                  │
+│  Thread: dedicated Oboe audio callback thread           │
+└──────────────────────────┬─────────────────────────────┘
+                           │  calls (lock-free ring buffer for atoms)
+┌──────────────────────────▼─────────────────────────────┐
+│              DSP Host Layer (Shared Code)               │
+│  LV2Plugin.hpp — plugin wrap, port binding, RT state   │
+│  FileWriter.h/.cpp — multi-format recording            │
+│  LockFreeQueue.h — audio ↔ UI param transfer           │
+│  (identical to Windows and Linux builds)               │
+└────────────────────────────────────────────────────────┘</div>
+
+        <div class="dev-grid reveal" style="margin-top: 2rem;">
+          <div class="req-card">
+            <h3>Thread Ownership</h3>
+            <ul>
+              <li><strong>UI thread</strong> — all Java UI events, JNI calls to engine, plugin load/unload</li>
+              <li><strong>Oboe audio thread</strong> — capture, DSP process, render; no allocations, no Java calls</li>
+              <li><strong>FileWriter thread</strong> — encoding and disk write; runs in a background thread separate from the audio callback</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Audio Signal Path</h3>
+            <ul>
+              <li>Oboe captures input samples on the audio thread</li>
+              <li><code>FullDuplexPass::onBothStreamsReady()</code> receives input and output buffers</li>
+              <li><code>LiveEffectEngine::process()</code> chains through slots 1–4</li>
+              <li>Oboe writes output samples; <code>FileWriter</code> receives a copy if recording is active</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>LV2 buf-size Compliance</h3>
+            <ul>
+              <li>At stream start, the real Oboe burst size is queried</li>
+              <li><code>LV2Plugin</code> is instantiated with <code>bufsz:boundedBlockLength</code> and correct min/max/nominal block lengths set from the actual burst size</li>
+              <li>This prevents plugins from assuming a fixed or arbitrary block size</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SOURCE LAYOUT ===== -->
+    <section class="dev-section" id="source-layout">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§3</span>
+          <h2 class="section__title">Project Structure</h2>
+        </div>
+
+        <div class="tree reveal">opiqo-android/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── <span class="hl">java/org/acoustixaudio/opiqo/multi/</span>
+│   │   │   │   ├── MainActivity.java          <span style="color:#64748b;"># Main UI; permissions, plugin loading</span>
+│   │   │   │   ├── SettingsActivity.java      <span style="color:#64748b;"># Settings UI; audio options + preset I/E</span>
+│   │   │   │   ├── AudioEngine.java           <span style="color:#64748b;"># JNI declarations for the native engine</span>
+│   │   │   │   ├── CollectionFragment.java    <span style="color:#64748b;"># Tab-pager fragment (hosts 4 pedal tabs)</span>
+│   │   │   │   ├── CollectionAdapter.java     <span style="color:#64748b;"># ViewPager2 adapter (4 pedal slots)</span>
+│   │   │   │   ├── ObjectFragment.java        <span style="color:#64748b;"># Single pedal slot fragment</span>
+│   │   │   │   ├── UI.java                    <span style="color:#64748b;"># Dynamic plugin UI builder</span>
+│   │   │   │   └── Test.java                  <span style="color:#64748b;"># Developer test helpers</span>
+│   │   │   ├── <span class="hl">cpp/</span>
+│   │   │   │   ├── CMakeLists.txt             <span style="color:#64748b;"># Native build configuration</span>
+│   │   │   │   ├── multi.cpp                  <span style="color:#64748b;"># Main native audio processor</span>
+│   │   │   │   ├── jni_bridge.cpp             <span style="color:#64748b;"># Java/Native JNI interface</span>
+│   │   │   │   ├── LiveEffectEngine.cpp/.h    <span style="color:#64748b;"># Full-duplex engine (Oboe), plugin slots</span>
+│   │   │   │   ├── FullDuplexPass.h           <span style="color:#64748b;"># Full-duplex Oboe stream helper</span>
+│   │   │   │   ├── LV2Plugin.hpp              <span style="color:#64748b;"># Generic LV2 plugin wrapper</span>
+│   │   │   │   ├── LV2OboeHost.hpp            <span style="color:#64748b;"># Single-plugin Oboe host</span>
+│   │   │   │   ├── jalv.cpp/.h                <span style="color:#64748b;"># JACK/LV2 host utilities</span>
+│   │   │   │   ├── lv2_ringbuffer.h           <span style="color:#64748b;"># Lock-free ringbuffer for atom messages</span>
+│   │   │   │   ├── json.hpp                   <span style="color:#64748b;"># nlohmann/json (single-header)</span>
+│   │   │   │   ├── kitty.cpp                  <span style="color:#64748b;"># Utility helpers</span>
+│   │   │   │   └── logging_macros.h           <span style="color:#64748b;"># Android NDK logging helpers</span>
+│   │   │   ├── <span class="hl">assets/lv2/</span>                    <span style="color:#64748b;"># 54 bundled LV2 plugin bundles</span>
+│   │   │   ├── res/
+│   │   │   │   ├── layout/
+│   │   │   │   │   ├── activity_main.xml      <span style="color:#64748b;"># Root: pager + control bar</span>
+│   │   │   │   │   ├── pager.xml              <span style="color:#64748b;"># TabLayout + ViewPager2</span>
+│   │   │   │   │   └── plugin.xml             <span style="color:#64748b;"># Pedal slot: plugin UI + add button</span>
+│   │   │   │   └── ...
+│   │   │   └── AndroidManifest.xml
+│   ├── build.gradle
+│   └── proguard-rules.pro
+├── gradle/
+│   ├── libs.versions.toml                     <span style="color:#64748b;"># Centralized dependency management</span>
+│   └── wrapper/
+├── build.gradle
+└── settings.gradle</div>
+
+        <h3 style="color: var(--text-primary, #f1f5f9); margin: 2rem 0 1rem; font-size: 1.05rem;">Key Java Classes</h3>
+        <div style="overflow-x: auto;">
+          <table class="file-table reveal">
+            <thead>
+              <tr><th>Class</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>MainActivity.java</code></td><td>Main UI activity. Handles the <code>RECORD_AUDIO</code> permission request, initialises the <code>CollectionFragment</code> tab layout, wires the master power toggle, volume slider, input/output device spinners, and record button. Registers the permission launcher in <code>onCreate()</code>.</td></tr>
+              <tr><td><code>SettingsActivity.java</code></td><td>Audio options and preset import/export. Provides the export button (writes <code>getPresetList()</code> to a user-chosen JSON file via the system document picker) and the import button (reads a JSON file and calls <code>applyPreset()</code> for each entry).</td></tr>
+              <tr><td><code>AudioEngine.java</code></td><td>Thin Java wrapper declaring all <code>native</code> JNI method signatures. Acts as the boundary between Java UI and native engine code.</td></tr>
+              <tr><td><code>CollectionFragment.java</code></td><td>Hosts the <code>ViewPager2</code> with a <code>TabLayout</code> for the 4 pedal slots. Manages tab labels and pager adapter lifecycle.</td></tr>
+              <tr><td><code>CollectionAdapter.java</code></td><td><code>FragmentStateAdapter</code> implementation producing one <code>ObjectFragment</code> per slot (0–3).</td></tr>
+              <tr><td><code>ObjectFragment.java</code></td><td>Single pedal slot fragment. Inflates <code>plugin.xml</code>, handles the <code>+</code> button for plugin selection, and delegates to <code>UI.java</code> for parameter panel construction after a plugin is loaded.</td></tr>
+              <tr><td><code>UI.java</code></td><td>Dynamic plugin UI builder. Called after a plugin loads — queries LV2 control port metadata via JNI and constructs labelled sliders for each controllable port. Also adds the bypass toggle and delete button to the slot view.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="color: var(--text-primary, #f1f5f9); margin: 2rem 0 1rem; font-size: 1.05rem;">Key Native (C++) Files</h3>
+        <div style="overflow-x: auto;">
+          <table class="file-table reveal">
+            <thead>
+              <tr><th>File</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>LiveEffectEngine.cpp/.h</code></td><td>Extends Oboe's <code>FullDuplexStream</code>. Maintains plugin slot array (<code>plugin1</code>–<code>plugin4</code>). Implements <code>onBothStreamsReady()</code> — the Oboe audio callback that chains LV2 plugin processing and applies master gain.</td></tr>
+              <tr><td><code>FullDuplexPass.h</code></td><td>Oboe helper that opens and manages paired input/output streams, calling <code>onBothStreamsReady()</code> when both streams have data ready.</td></tr>
+              <tr><td><code>LV2Plugin.hpp</code></td><td>Generic LV2 plugin wrapper. Manages plugin instantiation via Lilv, port binding for audio and control ports, parameter get/set, bypass state, atom message ring buffer, and plugin activation/deactivation. Shared verbatim across all Opiqo platforms.</td></tr>
+              <tr><td><code>jni_bridge.cpp</code></td><td>JNI entry points callable from Java. Maps Java method calls to native engine operations: load/unload plugin, set parameter value, enable/disable bypass, start/stop engine, start/stop recording, get plugin list.</td></tr>
+              <tr><td><code>multi.cpp</code></td><td>Main native audio processor. Contains the <code>LiveEffectEngine</code> singleton instance and helper functions for engine lifecycle management.</td></tr>
+              <tr><td><code>lv2_ringbuffer.h</code></td><td>Lock-free single-producer/single-consumer ring buffer used to pass LV2 atom messages (file paths, MIDI events) from the UI thread to the audio thread without allocations in the hot path.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== AUDIO PIPELINE ===== -->
+    <section class="dev-section" id="audio-pipeline">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§4</span>
+          <h2 class="section__title">Audio Processing Pipeline</h2>
+        </div>
+
+        <div class="arch-diagram reveal">Guitar / Microphone Input
+         ↓
+  [Oboe Input Stream]  — selected input device
+         ↓
+  FullDuplexPass::onBothStreamsReady()
+         ↓
+  LiveEffectEngine::process(inputData, outputData, numFrames)
+         │
+         ├── plugin1.isEnabled ? plugin1.process() : bypass
+         ├── plugin2.isEnabled ? plugin2.process() : bypass
+         ├── plugin3.isEnabled ? plugin3.process() : bypass
+         └── plugin4.isEnabled ? plugin4.process() : bypass
+         ↓
+  Apply master gain scaling
+         ↓
+  ┌──────────────────────┐
+  │  [Oboe Output Stream]│ → selected output device (headphones, speaker, USB)
+  └──────────────────────┘
+         │ (copy if recording)
+  FileWriter::write(buffer, frames) → WAV / FLAC / MP3 / Opus / OGG</div>
+
+        <div class="dev-grid reveal" style="margin-top: 2rem;">
+          <div class="req-card">
+            <h3>Oboe Stream Configuration</h3>
+            <ul>
+              <li>Audio API: AAudio (preferred); falls back to OpenSL ES</li>
+              <li>Performance mode: <code>LowLatency</code></li>
+              <li>Sharing mode: <code>Exclusive</code> (falls back to Shared)</li>
+              <li>Sample format: <code>Float</code></li>
+              <li>Channel count: Stereo (from input, to output)</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Real-time Safety Rules</h3>
+            <ul>
+              <li>No heap allocations in <code>onBothStreamsReady()</code></li>
+              <li>No Java calls from the audio callback thread</li>
+              <li>No mutex locks in the hot path</li>
+              <li>Parameter updates from UI thread use the lock-free ring buffer</li>
+              <li>Atom messages queued in <code>lv2_ringbuffer</code>, consumed per cycle</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LV2 INTEGRATION ===== -->
+    <section class="dev-section" id="lv2">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§5</span>
+          <h2 class="section__title">LV2 Plugin Integration</h2>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Plugin Discovery</h3>
+            <ul>
+              <li>On first launch, all bundles under <code>assets/lv2/</code> are copied to <code>getFilesDir()/lv2/</code></li>
+              <li>Lilv's <code>LilvWorld</code> is pointed at the private <code>files/lv2/</code> path</li>
+              <li><code>lilv_world_discover_all_bundles()</code> loads all discovered plugins</li>
+              <li>No changes to Java or C++ code are needed when adding new bundles</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Querying Port Information</h3>
+            <pre style="font-size: .8rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>LilvPlugin* plugin =
+  lilv_plugins_get_by_uri(plugins, uri);
+
+LILV_FOREACH(ports, i, ports) {
+  LilvPort* port = lilv_ports_get(ports, i);
+
+  bool is_audio  = lilv_port_is_a(
+    plugin, port, node_AudioPort);
+  bool is_control = lilv_port_is_a(
+    plugin, port, node_ControlPort);
+  bool is_atom   = lilv_port_is_a(
+    plugin, port, node_AtomPort);
+}</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>Querying Port Range (Sliders)</h3>
+            <pre style="font-size: .8rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>LilvNode *min_val = NULL,
+         *max_val = NULL,
+         *default_val = NULL;
+
+lilv_port_get_range(
+  plugin, port,
+  &amp;default_val, &amp;min_val, &amp;max_val);
+
+float min = lilv_node_as_float(min_val);
+float max = lilv_node_as_float(max_val);
+float def = lilv_node_as_float(default_val);
+
+// Clean up
+lilv_node_free(min_val);
+lilv_node_free(max_val);
+lilv_node_free(default_val);</code></pre>
+          </div>
+        </div>
+
+        <h3 style="color: var(--text-primary, #f1f5f9); margin: 2rem 0 1rem; font-size: 1.05rem;">Atom Messaging for File Paths</h3>
+        <p style="color: var(--text-secondary, #94a3b8); max-width: 760px; line-height: 1.8; margin-bottom: 1rem;">
+          Plugins that accept external file paths (IR loaders, cab simulators) use LV2 atom messages. The file path is written as an atom sequence into the lock-free ring buffer from the UI thread; the audio thread reads it during the next processing cycle.
+        </p>
+        <div class="download-card reveal">
+          <pre><code>// 1. From the UI thread — write atom sequence to ring buffer
+LV2_Atom_Sequence* seq = (LV2_Atom_Sequence*) ringbuf_write_ptr;
+seq->atom.type = uris->Sequence;
+// ... write LV2_Atom_Event with file path body ...
+ringbuffer.writeAdvance(total_size);
+
+// 2. Audio thread — read from ring buffer during processing
+if (ringbuffer.readAvailable()) {
+    LV2_Atom* atom = ringbuffer.readPtr();
+    plugin->connectAtomPort(portIndex, atom);
+    ringbuffer.readAdvance();
+}
+
+// 3. Plugin processes atom in onBothStreamsReady()
+// State persists until a new atom message replaces it</code></pre>
+        </div>
+        <div class="warn reveal">
+          <strong>Note:</strong> Send the file path atom once per file change. Some plugins hold the loaded file state in their internal buffers between audio cycles. Sending a null/empty atom will unload the file; resend the path to reload it.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JNI BRIDGE ===== -->
+    <section class="dev-section" id="jni">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§6</span>
+          <h2 class="section__title">JNI Bridge</h2>
+          <p class="section__desc">All Java ↔ native communication flows through <code>jni_bridge.cpp</code>. JNI methods are declared in <code>AudioEngine.java</code> and called from the UI thread only.</p>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Engine Lifecycle</h3>
+            <ul>
+              <li><code>native boolean startEngine()</code> — opens Oboe streams with configured settings</li>
+              <li><code>native void stopEngine()</code> — closes streams, releases resources</li>
+              <li><code>native boolean isRunning()</code> — returns current audio engine state</li>
+              <li><code>native void setInputDevice(int deviceId)</code> — selects input endpoint</li>
+              <li><code>native void setOutputDevice(int deviceId)</code> — selects output endpoint</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Plugin Management</h3>
+            <ul>
+              <li><code>native String[] getAvailablePlugins()</code> — returns list of plugin URIs from Lilv world</li>
+              <li><code>native boolean loadPlugin(int slot, String uri)</code> — loads plugin into slot 0–3</li>
+              <li><code>native void unloadPlugin(int slot)</code> — unloads plugin and frees LV2 resources</li>
+              <li><code>native void setBypass(int slot, boolean bypass)</code> — enables/disables bypass for the slot</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Parameter &amp; Recording</h3>
+            <ul>
+              <li><code>native void setParameterValue(int slot, int portIndex, float value)</code> — queues parameter update via lock-free buffer</li>
+              <li><code>native void setMasterGain(float gain)</code> — sets output gain scaling</li>
+              <li><code>native void startRecording(int fd, int format, int quality)</code> — begins file recording</li>
+              <li><code>native void stopRecording()</code> — finalises and closes the output file</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="warn reveal">
+          <strong>Important:</strong> The <code>RECORD_AUDIO</code> permission launcher must be registered in <code>onCreate()</code> — not in response to a user interaction after the Activity is already in <code>RESUMED</code> state. If you encounter <em>"LifecycleOwner is attempting to register while current state is RESUMED"</em>, move the launcher registration to <code>MainActivity.onCreate()</code>.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== UI COMPONENTS ===== -->
+    <section class="dev-section" id="ui">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§7</span>
+          <h2 class="section__title">UI Components</h2>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Main Screen Controls</h3>
+            <ul>
+              <li><strong>Power Toggle</strong> — master on/off; calls <code>startEngine()</code> / <code>stopEngine()</code>; requests <code>RECORD_AUDIO</code> if not already granted</li>
+              <li><strong>Volume Slider</strong> — calls <code>setMasterGain(value)</code></li>
+              <li><strong>Input Device Spinner</strong> — populated from Android's <code>AudioManager</code>; calls <code>setInputDevice(id)</code></li>
+              <li><strong>Output Device Spinner</strong> — calls <code>setOutputDevice(id)</code></li>
+              <li><strong>Record Button</strong> — calls <code>startRecording(fd, format, quality)</code> / <code>stopRecording()</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Pedal Slot (ObjectFragment)</h3>
+            <ul>
+              <li><strong>+ Button</strong> — opens plugin selection dialog backed by <code>getAvailablePlugins()</code></li>
+              <li><strong>Bypass Switch</strong> — toggle in plugin header; calls <code>setBypass(slot, state)</code></li>
+              <li><strong>Delete Button</strong> — calls <code>unloadPlugin(slot)</code>, clears parameter panel</li>
+              <li><strong>Parameter Sliders</strong> — one per control port; generated by <code>UI.java</code> from LV2 port metadata; slider change calls <code>setParameterValue(slot, portIndex, value)</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Dynamic UI Generation (UI.java)</h3>
+            <ul>
+              <li>Queries LV2 control port count, labels, min, max, default via JNI after plugin load</li>
+              <li>Creates one <code>SeekBar</code> + label per port, scaled to [0, 100] and mapped to [min, max]</li>
+              <li>Atom-type ports (file path) are skipped in the slider UI; handled via atom messages separately if needed</li>
+              <li>All views are added to the slot's <code>LinearLayout</code> programmatically — no layout XML changes needed for new plugins</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PRESET MANAGEMENT ===== -->
+    <section class="dev-section" id="presets">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§8</span>
+          <h2 class="section__title">Preset Management</h2>
+        </div>
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Export</h3>
+            <ul>
+              <li>User taps <strong>Export</strong> in <code>SettingsActivity</code></li>
+              <li>System document picker is opened with <code>ACTION_CREATE_DOCUMENT</code></li>
+              <li>On file selection, <code>getPresetList()</code> is called via JNI — returns all preset names and plugin configurations</li>
+              <li>Data is serialised to JSON with nlohmann/json and written to the chosen file descriptor</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Import</h3>
+            <ul>
+              <li>User taps <strong>Import</strong> in <code>SettingsActivity</code></li>
+              <li>System document picker opened with <code>ACTION_OPEN_DOCUMENT</code></li>
+              <li>Selected JSON file is read; each preset object is passed to <code>applyPreset()</code> via JNI</li>
+              <li>Preset files are written to <code>getFilesDir()/presets/</code> and the preset list is reloaded immediately — no restart needed</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Preset JSON Format</h3>
+            <pre style="font-size: .8rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>{
+  "presets": [
+    {
+      "name": "Blues Lead",
+      "slots": [
+        {
+          "slot": 0,
+          "uri": "http://guitarix.../GxEternity",
+          "enabled": true,
+          "params": [
+            { "port": 2, "value": 0.7 },
+            { "port": 3, "value": 0.4 }
+          ]
+        }
+      ]
+    }
+  ]
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PERMISSIONS ===== -->
+    <section class="dev-section" id="permissions">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§9</span>
+          <h2 class="section__title">Permissions</h2>
+        </div>
+        <div class="req-card reveal" style="max-width: 680px;">
+          <h3>RECORD_AUDIO</h3>
+          <ul>
+            <li>Required permission: <code>android.permission.RECORD_AUDIO</code></li>
+            <li>Declared in <code>AndroidManifest.xml</code></li>
+            <li>Requested at runtime on Android 6.0+ (API 23+)</li>
+            <li>Permission request is triggered when the user first taps the Power toggle or loads a plugin</li>
+            <li>The permission launcher <strong>must be registered in <code>onCreate()</code></strong> before the Activity reaches <code>STARTED</code> state</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ADDING PLUGINS ===== -->
+    <section class="dev-section" id="adding-plugins">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§10</span>
+          <h2 class="section__title">Adding New LV2 Plugin Bundles</h2>
+        </div>
+        <ol class="steps" style="counter-reset: none;" aria-label="Steps to add a new LV2 plugin">
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">01</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+            </div>
+            <h3 class="step__title">Cross-Compile for Android ABIs</h3>
+            <p class="step__desc">Compile the plugin's <code>.so</code> library for each target ABI: <code>arm64-v8a</code>, <code>armeabi-v7a</code>, <code>x86</code>, <code>x86_64</code> using the Android NDK toolchain. Ensure all dependencies are statically linked or provided as separate <code>.so</code> files.</p>
+          </li>
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">02</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+            </div>
+            <h3 class="step__title">Create the LV2 Bundle Directory</h3>
+            <p class="step__desc">Create a directory under <code>app/src/main/assets/lv2/</code> named <code>&lt;PluginName&gt;.lv2/</code>. Add the plugin's <code>manifest.ttl</code> and plugin-specific <code>.ttl</code> file(s) to this directory. Add the compiled <code>.so</code> library to <code>app/src/main/jniLibs/&lt;ABI&gt;/</code>.</p>
+          </li>
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">03</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 class="step__title">Rebuild — No Code Changes Required</h3>
+            <p class="step__desc">Run <code>./gradlew assembleDebug</code>. On next app launch, the assets copier runs and copies all bundles from <code>assets/lv2/</code> to <code>files/lv2/</code>. Lilv discovers the new plugin automatically — it will appear in the plugin selection dialog.</p>
+          </li>
+        </ol>
+        <div class="note reveal">
+          <strong>Note:</strong> The app copies bundles from <code>assets/lv2/</code> to <code>files/lv2/</code> only on the <em>first launch</em> (or after a fresh install). To force re-copy during development, clear the app's data in Android Settings or uninstall and reinstall.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== BUILD SYSTEM ===== -->
+    <section class="dev-section" id="build">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§11</span>
+          <h2 class="section__title">Build System</h2>
+          <p class="section__desc">Standard Android Gradle project using the Android Gradle Plugin with a CMake native build for the C++ code.</p>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Common Gradle Tasks</h3>
+            <pre style="font-size: .82rem; line-height: 1.9; color: #94a3b8; margin: 0;"><code># Debug APK
+./gradlew assembleDebug
+
+# Release APK (requires signing config)
+./gradlew assembleRelease
+
+# Install debug build to connected device/emulator
+./gradlew installDebug
+
+# Run unit tests
+./gradlew test
+
+# Clean
+./gradlew clean</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>CMake Configuration (cpp/CMakeLists.txt)</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>cmake_minimum_required(VERSION 3.22.1)
+project(opiqo VERSION 1.0)
+
+# Find Android log library
+find_library(log-lib log)
+
+# Add native shared library
+add_library(opiqo SHARED
+  multi.cpp
+  jni_bridge.cpp
+  LiveEffectEngine.cpp
+  kitty.cpp
+)
+
+target_link_libraries(opiqo
+  ${log-lib}
+  oboe
+  jack lilv-0 sord-0 sratom-0
+  sndfile
+)</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Android Studio (latest stable recommended)</li>
+              <li>Android SDK with API 31+</li>
+              <li>Android NDK (latest stable)</li>
+              <li>CMake 3.22.1+ (installed via SDK Manager)</li>
+              <li>JDK 11+</li>
+              <li>Google Oboe v1.10.0 (via Android Gradle Plugin <code>prefab</code> support)</li>
+            </ul>
+            <div style="margin-top: 1rem; color: #94a3b8; font-size: .85rem;">
+              Requires Android Gradle Plugin 9.0.0+ for Prefab v2 support (Oboe dependency delivery).
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+          <span class="logo-icon" aria-hidden="true">🎸</span>
+          <span class="logo-text">opiqo</span>
+        </a>
+        <p class="footer__tagline">Professional LV2 Guitar Effects for Every Platform.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer navigation">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Android Docs</h4>
+          <a href="#overview" class="footer__link">Overview</a>
+          <a href="#architecture" class="footer__link">Architecture</a>
+          <a href="#source-layout" class="footer__link">Source Layout</a>
+          <a href="#lv2" class="footer__link">LV2 Integration</a>
+          <a href="#build" class="footer__link">Build System</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Links</h4>
+          <a href="index.html" class="footer__link">Android Project Page</a>
+          <a href="https://github.com/djshaji/opiqo-android" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          <a href="https://play.google.com/store/apps/details?id=org.acoustixaudio.opiqo.multi" class="footer__link" target="_blank" rel="noopener noreferrer">Google Play</a>
+          <a href="https://github.com/djshaji/opiqo-android/issues" class="footer__link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+          <a href="../index.html" class="footer__link">All Platforms</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Resources</h4>
+          <a href="https://lv2plug.in/" class="footer__link" target="_blank" rel="noopener noreferrer">LV2 Specification</a>
+          <a href="https://github.com/google/oboe" class="footer__link" target="_blank" rel="noopener noreferrer">Google Oboe</a>
+          <a href="https://developer.android.com/ndk/guides" class="footer__link" target="_blank" rel="noopener noreferrer">Android NDK Guide</a>
+          <a href="../windows/developer.html" class="footer__link">Windows Dev Guide</a>
+          <a href="../linux/developer.html" class="footer__link">Linux Dev Guide</a>
+        </div>
+      </nav>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>© 2026 Opiqo. Released under the <a href="https://github.com/djshaji/opiqo-android/blob/main/LICENSE" class="link" target="_blank" rel="noopener noreferrer">MIT License</a>. · <a href="../privacy.html" class="link">Privacy Policy</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

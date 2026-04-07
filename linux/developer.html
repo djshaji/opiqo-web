@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Opiqo Linux Developer Guide — Architecture, build system, milestone plan, source layout, threading model, and test plan for the GTK4 + JACK implementation." />
+  <meta property="og:title" content="Opiqo Linux Developer Guide" />
+  <meta property="og:description" content="Full developer documentation for the Opiqo Linux GTK4 + JACK implementation. Architecture, milestones, source layout, and build instructions." />
+  <meta property="og:type" content="website" />
+  <title>Opiqo Linux — Developer Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* Developer-page extras */
+    .dev-section { padding: 4rem 0; }
+    .dev-section + .dev-section { border-top: 1px solid rgba(148,163,184,.12); }
+    .milestone { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.75rem 2rem; margin-bottom: 1.5rem; }
+    .milestone__header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .milestone__num { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-weight: 700; font-size: .85rem; padding: .3rem .7rem; border-radius: 6px; flex-shrink: 0; }
+    .milestone__title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary, #f1f5f9); margin: 0; }
+    .milestone__goal { color: var(--text-secondary, #94a3b8); margin: 0 0 1rem; font-size: .95rem; }
+    .milestone__tasks { color: var(--text-secondary, #94a3b8); padding-left: 1.25rem; margin: 0; font-size: .9rem; line-height: 1.8; }
+    .milestone__criteria { margin-top: 1rem; padding: .75rem 1rem; background: rgba(99,102,241,.08); border-left: 3px solid #6366f1; border-radius: 0 6px 6px 0; }
+    .milestone__criteria p { margin: 0 0 .25rem; font-size: .85rem; font-weight: 600; color: #818cf8; }
+    .milestone__criteria ul { margin: 0; padding-left: 1.1rem; color: var(--text-secondary, #94a3b8); font-size: .85rem; line-height: 1.8; }
+    .arch-diagram { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 2rem; text-align: center; font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; font-size: .85rem; line-height: 1.9; color: var(--text-secondary, #94a3b8); white-space: pre; overflow-x: auto; }
+    .file-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+    .file-table th { text-align: left; padding: .75rem 1rem; background: rgba(99,102,241,.12); color: #818cf8; font-size: .85rem; font-weight: 600; border-bottom: 1px solid rgba(148,163,184,.12); }
+    .file-table td { padding: .75rem 1rem; border-bottom: 1px solid rgba(148,163,184,.08); color: var(--text-secondary, #94a3b8); font-size: .85rem; vertical-align: top; }
+    .file-table td code { font-size: .82rem; background: rgba(99,102,241,.1); padding: .1rem .35rem; border-radius: 4px; color: #a5b4fc; }
+    .dev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .req-card { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem; }
+    .req-card h3 { color: var(--text-primary, #f1f5f9); font-size: 1rem; font-weight: 700; margin: 0 0 1rem; }
+    .req-card ul { margin: 0; padding-left: 1.15rem; color: var(--text-secondary, #94a3b8); font-size: .88rem; line-height: 2; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: .25rem .65rem; border-radius: 20px; font-size: .78rem; font-weight: 600; }
+    .badge--blue { background: rgba(99,102,241,.15); color: #818cf8; }
+    .badge--green { background: rgba(34,197,94,.1); color: #4ade80; }
+    .badge--violet { background: rgba(139,92,246,.12); color: #a78bfa; }
+    .toc { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 3rem; }
+    .toc h2 { font-size: 1rem; font-weight: 700; color: var(--text-primary, #f1f5f9); margin: 0 0 .75rem; }
+    .toc ol { margin: 0; padding-left: 1.25rem; }
+    .toc li { margin: .3rem 0; }
+    .toc a { color: #818cf8; text-decoration: none; font-size: .9rem; }
+    .toc a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+        <span class="logo-icon" aria-hidden="true">🎸</span>
+        <span class="logo-text">opiqo</span>
+      </a>
+      <nav class="navbar__nav" id="navMenu" aria-label="Main navigation">
+        <a href="index.html" class="nav-link">Linux</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#milestones" class="nav-link">Milestones</a>
+        <a href="#build" class="nav-link">Build</a>
+        <a href="https://github.com/djshaji/opiqo-linux" class="nav-link nav-link--cta" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <button class="navbar__hamburger" id="hamburgerBtn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="hero" style="padding-bottom: 2rem;">
+      <div class="container hero__inner">
+        <div class="hero__text">
+          <span class="hero__badge">Developer Guide · Linux</span>
+          <h1 class="hero__title">Opiqo Linux<br /><span class="gradient-text">Implementation Guide</span></h1>
+          <p class="hero__sub">Complete technical documentation for the Opiqo Linux port — a native GTK4 desktop LV2 plugin host built on JACK Audio Connection Kit. Covers architecture, source layout, CMake build system, 11-milestone delivery plan, threading model, and test strategy.</p>
+          <div class="hero__ctas">
+            <a href="https://github.com/djshaji/opiqo-linux" class="btn btn--primary" target="_blank" rel="noopener noreferrer">
+              <svg class="btn__icon" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+            <a href="index.html" class="btn btn--secondary">Linux Project Page</a>
+          </div>
+          <div class="badge-row" style="margin-top: 1.5rem;">
+            <span class="badge badge--blue">GTK4</span>
+            <span class="badge badge--blue">JACK / PipeWire</span>
+            <span class="badge badge--blue">C++17</span>
+            <span class="badge badge--blue">CMake 3.22+</span>
+            <span class="badge badge--green">MIT License</span>
+            <span class="badge badge--violet">X11 + Wayland</span>
+            <span class="badge badge--violet">SCHED_FIFO</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TABLE OF CONTENTS ===== -->
+    <section style="padding: 1rem 0 2rem;">
+      <div class="container">
+        <div class="toc">
+          <h2>Table of Contents</h2>
+          <ol>
+            <li><a href="#objective">Objective</a></li>
+            <li><a href="#technology">Technology Choices</a></li>
+            <li><a href="#source-layout">Source Layout</a></li>
+            <li><a href="#build">Build System</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#milestones">Milestone Plan</a></li>
+            <li><a href="#requirements">Cross-cutting Requirements</a></li>
+            <li><a href="#file-summary">File Group Summary</a></li>
+            <li><a href="#tests">Test Plan</a></li>
+            <li><a href="#prerequisites">Prerequisites</a></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== OBJECTIVE ===== -->
+    <section class="dev-section" id="objective">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§1</span>
+          <h2 class="section__title">Objective</h2>
+        </div>
+        <p style="color: var(--text-secondary, #94a3b8); max-width: 760px; line-height: 1.8; font-size: 1rem;">
+          Build a native Linux port of the Opiqo LV2 plugin host that runs low-latency duplex audio via the JACK Audio Connection Kit, processes audio through the existing <code>LiveEffectEngine</code> in real time, provides a GTK4 desktop UI with 4 plugin slots in a 2×2 layout, and supports JACK port routing, transport control, and recording.
+        </p>
+        <div class="download-card reveal" style="max-width: 700px; margin-top: 1.5rem;">
+          <h3 style="color: var(--text-primary, #f1f5f9); margin: 0 0 .75rem; font-size: 1rem;">Primary Runtime Path</h3>
+          <pre><code>JACK capture ports
+  → LiveEffectEngine::process(input, output, frames)
+    → JACK playback ports</code></pre>
+          <p style="color: var(--text-secondary, #94a3b8); margin: 1rem 0 0; font-size: .9rem;">
+            The DSP and file-writing layer (<code>LiveEffectEngine</code>, <code>LV2Plugin</code>, <code>FileWriter</code>, <code>LockFreeQueue</code>) is shared verbatim with the Windows build. Only the audio platform and UI layers need a new Linux-specific implementation.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TECHNOLOGY CHOICES ===== -->
+    <section class="dev-section" id="technology">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§2</span>
+          <h2 class="section__title">Technology Choices</h2>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="file-table reveal">
+            <thead>
+              <tr>
+                <th>Concern</th>
+                <th>Windows</th>
+                <th>Linux</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>UI toolkit</td><td>Win32 API</td><td><code>GTK4</code></td></tr>
+              <tr><td>Audio backend</td><td>WASAPI</td><td><code>JACK (libjack2)</code></td></tr>
+              <tr><td>Device discovery</td><td><code>IMMDeviceEnumerator (COM)</code></td><td><code>jack_get_ports()</code></td></tr>
+              <tr><td>Hot-plug events</td><td><code>IMMNotificationClient</code></td><td><code>jack_set_port_registration_callback()</code></td></tr>
+              <tr><td>Settings storage</td><td><code>%APPDATA%\Opiqo\settings.json</code></td><td><code>~/.config/opiqo/settings.json</code> (XDG)</td></tr>
+              <tr><td>Build</td><td>MinGW cross-compile</td><td>Native CMake, pkg-config</td></tr>
+              <tr><td>UI definition</td><td>Win32 resources (<code>.rc</code>)</td><td>GtkBuilder <code>.ui</code> XML</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="req-card reveal" style="max-width: 700px; margin-top: 1.5rem;">
+          <h3>Why JACK instead of PipeWire-native or ALSA?</h3>
+          <ul>
+            <li>JACK provides a guaranteed real-time callback (<code>jack_process_callback</code>) with float32 buffers matching <code>LiveEffectEngine</code>'s expected format — zero conversion required.</li>
+            <li>PipeWire ships a full JACK compatibility layer (<code>pipewire-jack</code>); the same binary works on both classic JACK2 and modern PipeWire systems.</li>
+            <li>ALSA would require manual latency management and ring-buffer design already solved by JACK.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SOURCE LAYOUT ===== -->
+    <section class="dev-section" id="source-layout">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§3</span>
+          <h2 class="section__title">Source Layout</h2>
+          <p class="section__desc">New Linux-specific files are placed in <code>src/linux/</code> to mirror <code>src/win32/</code>. Shared files are unchanged.</p>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>New Linux Files</h3>
+            <pre style="font-size: .82rem; line-height: 1.8; color: #94a3b8; margin: 0; white-space: pre-wrap;"><code>src/
+  main_linux.cpp          ← GtkApplication entry
+
+  linux/
+    AppSettings.h/.cpp    ← XDG config load/save
+    AudioEngine.h/.cpp    ← JACK client lifecycle
+    JackPortEnum.h/.cpp   ← JACK port discovery
+    MainWindow.h/.cpp     ← GtkApplicationWindow
+    ControlBar.h/.cpp     ← Power/gain/record bar
+    PluginSlot.h/.cpp     ← GtkFrame per slot
+    PluginDialog.h/.cpp   ← Plugin browser dialog
+    ParameterPanel.h/.cpp ← Dynamic GTK4 controls
+    SettingsDialog.h/.cpp ← Audio + preset settings
+
+    ui/
+      main_window.ui      ← GtkBuilder XML
+      plugin_slot.ui      ← Slot GtkBuilder XML
+      opiqo.gresource.xml ← Resource bundle
+    opiqo.css             ← GTK CSS styles</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>Shared Files (Unchanged)</h3>
+            <pre style="font-size: .82rem; line-height: 1.8; color: #94a3b8; margin: 0; white-space: pre-wrap;"><code>src/
+  LiveEffectEngine.h/.cpp
+  LV2Plugin.hpp
+  FileWriter.h/.cpp
+  LockFreeQueue.h/.cpp
+  AudioBuffer.h
+  utils.h
+  json.hpp
+  logging_macros.h
+  lv2_ringbuffer.h</code></pre>
+            <p style="color: #94a3b8; font-size: .85rem; margin: .75rem 0 0;">These files compile identically for Android, Windows, and Linux. No <code>#ifdef</code> guards needed in the shared layer.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== BUILD SYSTEM ===== -->
+    <section class="dev-section" id="build">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§4</span>
+          <h2 class="section__title">Build System</h2>
+          <p class="section__desc">A new <code>linux-default</code> CMake preset and target block alongside the existing Windows preset.</p>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>CMakePresets.json — new preset</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>{
+  "name": "linux-default",
+  "displayName": "Linux (GTK4 + JACK)",
+  "binaryDir": "${sourceDir}/build-linux",
+  "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Release",
+    "OPIQO_TARGET_PLATFORM": "linux"
+  }
+}</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>CMakeLists.txt additions</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>if(OPIQO_TARGET_PLATFORM STREQUAL "linux")
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(GTK4   REQUIRED gtk4)
+  pkg_check_modules(JACK   REQUIRED jack)
+  pkg_check_modules(LILV   REQUIRED lilv-0)
+  pkg_check_modules(SNDFILE REQUIRED sndfile)
+
+  add_executable(opiqo
+    src/main_linux.cpp
+    src/linux/AppSettings.cpp
+    src/linux/AudioEngine.cpp
+    src/linux/JackPortEnum.cpp
+    src/linux/MainWindow.cpp
+    src/linux/ControlBar.cpp
+    src/linux/PluginSlot.cpp
+    src/linux/PluginDialog.cpp
+    src/linux/ParameterPanel.cpp
+    src/linux/SettingsDialog.cpp
+    src/LiveEffectEngine.cpp
+    src/FileWriter.cpp
+    src/LockFreeQueue.cpp
+  )
+
+  target_link_libraries(opiqo PRIVATE
+    ${GTK4_LIBRARIES} ${JACK_LIBRARIES}
+    ${LILV_LIBRARIES} ${SNDFILE_LIBRARIES}
+    pthread dl
+  )
+endif()</code></pre>
+          </div>
+        </div>
+
+        <div class="req-card reveal" style="margin-top: 1.5rem; max-width: 600px;">
+          <h3>Build Commands</h3>
+          <pre style="font-size: .88rem; line-height: 1.8; color: #94a3b8; margin: 0;"><code>git clone https://github.com/djshaji/opiqo-linux.git
+cd opiqo-linux
+cmake --preset linux-default
+cmake --build build-linux -j$(nproc)
+./build-linux/opiqo</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ARCHITECTURE ===== -->
+    <section class="dev-section" id="architecture">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§5</span>
+          <h2 class="section__title">Architecture</h2>
+          <p class="section__desc">Three clearly separated layers with explicit thread ownership and lock-free cross-thread communication.</p>
+        </div>
+
+        <div class="arch-diagram reveal">┌─────────────────────────────────┐
+│         GTK4 UI Layer           │
+│  MainWindow, PluginSlot,        │
+│  ControlBar, PluginDialog,      │
+│  ParameterPanel, SettingsDialog │
+│  Thread: GTK main thread        │
+└────────────────┬────────────────┘
+                 │  calls (g_idle_add for replies)
+┌────────────────▼────────────────┐
+│      Audio Platform Layer       │
+│  AudioEngine (JACK client),     │
+│  JackPortEnum                   │
+│  Thread: JACK real-time thread  │
+└────────────────┬────────────────┘
+                 │  calls (LockFreeQueue for params)
+┌────────────────▼────────────────┐
+│        DSP Host Layer           │
+│  LiveEffectEngine + LV2Plugin   │
+│  (shared with Windows build)    │
+└─────────────────────────────────┘</div>
+
+        <div class="dev-grid reveal" style="margin-top: 2rem;">
+          <div class="req-card">
+            <h3>Thread Ownership</h3>
+            <ul>
+              <li><strong>GTK main thread</strong> — all widget creation, signal handlers, and UI state changes</li>
+              <li><strong>JACK real-time thread</strong> — <code>jack_process_callback</code> only; runs <code>LiveEffectEngine::process()</code></li>
+              <li><strong>Cross-thread</strong> — parameter updates via <code>LockFreeQueue</code>; JACK events to UI via <code>g_idle_add()</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>State Machine</h3>
+            <ul>
+              <li><code>Off → Starting → Running</code> (Power toggle on)</li>
+              <li><code>Running → Stopping → Off</code> (Power toggle off)</li>
+              <li><code>Any → Error</code> on JACK failure or server loss</li>
+              <li>State polled every 200 ms via <code>g_timeout_add</code></li>
+              <li>JACK server loss via <code>jack_set_server_lost_callback</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>AudioEngine Public API</h3>
+            <pre style="font-size: .8rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>enum class State {
+  Off, Starting, Running,
+  Stopping, Error
+};
+
+bool start(const std::string&amp; capturePort,
+           const std::string&amp; playbackPort);
+void stop();
+State       state()        const;
+int32_t     sampleRate()   const;
+int32_t     blockSize()    const;
+std::string errorMessage() const;
+uint64_t    xrunCount()    const;</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MILESTONES ===== -->
+    <section class="dev-section" id="milestones">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§6</span>
+          <h2 class="section__title">Milestone Plan</h2>
+          <p class="section__desc">11 milestones ordered to prove audio first, then build UI on top. Each milestone has concrete deliverables and acceptance criteria.</p>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M0</span>
+            <h3 class="milestone__title">Project Skeleton and Build Wiring</h3>
+          </div>
+          <p class="milestone__goal">Compile a minimal GTK4 window under the new <code>linux-default</code> preset.</p>
+          <ul class="milestone__tasks">
+            <li>Add the <code>linux-default</code> preset to <code>CMakePresets.json</code></li>
+            <li>Add the <code>if(OPIQO_TARGET_PLATFORM STREQUAL "linux")</code> block to <code>CMakeLists.txt</code></li>
+            <li>Create <code>src/main_linux.cpp</code> with a <code>GtkApplication</code> that opens a blank <code>GtkApplicationWindow</code></li>
+            <li>Add stub header/source files for all <code>src/linux/</code> modules</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li><code>cmake --preset linux-default &amp;&amp; cmake --build build-linux</code> succeeds without warnings on GTK4 ≥ 4.6 and JACK ≥ 1.9</li>
+              <li>Binary runs and shows a window without crashes</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M1</span>
+            <h3 class="milestone__title">JACK Port Enumeration and Settings Model</h3>
+          </div>
+          <p class="milestone__goal">Discover available JACK client ports and persist user preferences.</p>
+          <ul class="milestone__tasks">
+            <li><strong>JackPortEnum</strong>: open a temporary JACK client for probing; implement <code>enumerateCapturePorts()</code> and <code>enumeratePlaybackPorts()</code> using <code>jack_get_ports()</code> with <code>JackPortIsPhysical</code></li>
+            <li>Return <code>PortInfo { id, friendlyName, isDefault }</code> list matching shared <code>DeviceInfo</code> interface</li>
+            <li>Register <code>jack_set_port_registration_callback()</code>; marshal change events to GTK thread via <code>g_idle_add()</code></li>
+            <li><strong>AppSettings</strong>: fields <code>capturePort</code>, <code>playbackPort</code>, <code>sampleRate</code>, <code>recordFormat</code>, <code>recordQuality</code>, <code>gain</code></li>
+            <li>Load from <code>$XDG_CONFIG_HOME/opiqo/settings.json</code> (fallback to <code>~/.config/opiqo/settings.json</code>); save on shutdown</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Port list refreshes when a device is plugged/unplugged</li>
+              <li>Missing saved port falls back to first physical capture/playback port</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M2</span>
+            <h3 class="milestone__title">AudioEngine Core (JACK, Pass-Through)</h3>
+          </div>
+          <p class="milestone__goal">Prove full-duplex JACK pipeline with a clean pass-through path.</p>
+          <ul class="milestone__tasks">
+            <li><code>jack_client_open("opiqo", JackNoStartServer, nullptr)</code></li>
+            <li>Register one capture port and one playback port via <code>jack_port_register</code></li>
+            <li>Implement <code>jack_process_callback</code>: copy input → output (pass-through, no DSP yet)</li>
+            <li>Register <code>jack_set_xrun_callback</code> to increment <code>xrunCount_</code></li>
+            <li><code>start()</code> calls <code>jack_activate()</code> then <code>jack_connect()</code> to selected physical ports</li>
+            <li><code>stop()</code> calls <code>jack_deactivate()</code> then <code>jack_client_close()</code></li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>15-minute pass-through run without xruns on a quiet system</li>
+              <li>50 repeated <code>start()</code>/<code>stop()</code> cycles without leaked JACK clients</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M3</span>
+            <h3 class="milestone__title">LiveEffectEngine Integration in JACK Callback</h3>
+          </div>
+          <p class="milestone__goal">Replace pass-through with the real DSP path.</p>
+          <ul class="milestone__tasks">
+            <li>In <code>jack_process_callback</code>, call <code>engine_-&gt;process(capture_buf, playback_buf, nframes)</code></li>
+            <li>JACK native format is <code>float</code> (<code>jack_default_audio_sample_t</code>) — no format conversion needed</li>
+            <li>Register a second capture and playback port pair for stereo, or remix mono to both channels</li>
+            <li>Validate bypass: with no plugins loaded, signal passes through cleanly</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>With no plugins loaded: clean pass-through audible</li>
+              <li>With a plugin loaded in slot 1: effect audible on output</li>
+              <li>No allocations in the JACK callback (verified with <code>MALLOC_CHECK_=3</code>)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M4</span>
+            <h3 class="milestone__title">Power Toggle State Machine</h3>
+          </div>
+          <p class="milestone__goal">Make the Power button the single source of truth for engine transport.</p>
+          <ul class="milestone__tasks">
+            <li>Implement atomic <code>State</code> variable with transitions: <code>Off → Starting → Running</code>, <code>Running → Stopping → Off</code>, any → <code>Error</code></li>
+            <li>Wire <code>ControlBar</code> power toggle: On → <code>AudioEngine::start()</code>, Off → <code>AudioEngine::stop()</code></li>
+            <li><code>g_timeout_add(200, pollEngineState, this)</code> polls state on the GTK main thread</li>
+            <li>On <code>State::Error</code>: revert toggle to Off, show error in status bar</li>
+            <li><code>jack_set_server_lost_callback</code> → move to <code>Error</code> via <code>g_idle_add</code></li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Rapid start/stop spam (50×) leaves engine in a consistent state</li>
+              <li>JACK server crash moves UI to Error state without hang</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M5</span>
+            <h3 class="milestone__title">MainWindow Layout and 2×2 Plugin Slot Grid</h3>
+          </div>
+          <p class="milestone__goal">Build the full GTK4 shell layout.</p>
+          <ul class="milestone__tasks">
+            <li>Widget hierarchy: <code>GtkApplicationWindow → GtkBox → GtkHeaderBar + GtkGrid (2×2) + ControlBar + statusBar_</code></li>
+            <li>Define static skeleton in <code>main_window.ui</code> GtkBuilder file; load via <code>gtk_builder_new_from_resource</code></li>
+            <li>Minimum window size: 900 × 650 via <code>gtk_window_set_default_size</code></li>
+            <li>Load <code>opiqo.css</code> via <code>GtkCssProvider</code> for slot framing</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Window resizes gracefully; slots scale proportionally</li>
+              <li>Layout renders correctly on both X11 and Wayland</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M6</span>
+            <h3 class="milestone__title">Plugin Management UI</h3>
+          </div>
+          <p class="milestone__goal">Connect plugin lifecycle controls to existing <code>LiveEffectEngine</code> APIs.</p>
+          <ul class="milestone__tasks">
+            <li><strong>PluginSlot</strong>: one <code>GtkFrame</code> per slot with header row (name label + Add + Bypass + Delete) and parameter panel area</li>
+            <li><strong>PluginDialog</strong>: <code>GtkListView</code> + <code>GtkSingleSelection</code> backed by <code>getAvailablePlugins()</code>; <code>GtkSearchEntry</code> + <code>GtkFilterListModel</code> for filtering</li>
+            <li>Add (+): calls <code>addPlugin(slot, uri)</code> and rebuilds <code>ParameterPanel</code></li>
+            <li>Bypass: calls <code>setPluginEnabled(slot, !bypassed)</code></li>
+            <li>Delete (×): calls <code>deletePlugin(slot)</code> and <code>clearParameterPanel()</code></li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Each of the 4 slots independently manages its plugin instance</li>
+              <li>Bypass toggles effect in real time with no audible glitch</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M7</span>
+            <h3 class="milestone__title">Dynamic Parameter Panels</h3>
+          </div>
+          <p class="milestone__goal">Generate GTK4 controls at runtime from <code>LV2Plugin::PortInfo</code>.</p>
+          <ul class="milestone__tasks">
+            <li><code>ParameterPanel</code>: a <code>GtkScrolledWindow</code> containing a <code>GtkBox</code> (vertical) with one row per port</li>
+            <li>Float (range) → <code>GtkScale</code>; Float (enum) → <code>GtkDropDown</code>; Toggle → <code>GtkCheckButton</code>; Trigger → <code>GtkButton</code>; AtomFilePath → <code>GtkFileChooserNative</code></li>
+            <li>Value changes connect to <code>engine_-&gt;setValue()</code> via <code>g_signal_connect</code></li>
+            <li>All callbacks fire on the GTK main thread — no marshalling needed</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Slider movements update sound in real time without JACK xruns</li>
+              <li>Panels scroll cleanly when a plugin exposes many ports</li>
+              <li>Rebuilding the panel leaves no dangling widget references</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M8</span>
+            <h3 class="milestone__title">Recording UX and Format Handling</h3>
+          </div>
+          <p class="milestone__goal">Wire recording controls to <code>FileWriter</code> via <code>LiveEffectEngine</code>.</p>
+          <ul class="milestone__tasks">
+            <li>Record toggle: on → <code>engine_-&gt;startRecording(fd, format, quality)</code>; off → <code>stopRecording()</code></li>
+            <li>Output path: <code>g_get_user_special_dir(G_USER_DIRECTORY_MUSIC)</code> + timestamp filename</li>
+            <li>Format dropdown bound to <code>AppSettings::recordFormat</code> (0=WAV, 1=MP3, 2=OGG)</li>
+            <li>Quality dropdown shown only for lossy formats; hidden for WAV</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Recorded WAV/MP3/OGG files open in external players without corruption</li>
+              <li>Recording can start and stop while all 4 plugin slots are active</li>
+              <li>File is finalized cleanly even if the app exits during recording</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M9</span>
+            <h3 class="milestone__title">Settings Dialog and Runtime Reconfiguration</h3>
+          </div>
+          <p class="milestone__goal">Configurable audio preferences and preset import/export.</p>
+          <ul class="milestone__tasks">
+            <li><strong>SettingsDialog</strong>: <code>GtkDialog</code> with two tabs via <code>GtkNotebook</code></li>
+            <li><em>Audio tab</em>: JACK capture/playback port dropdowns (from <code>JackPortEnum</code>), read-only sample rate and buffer size labels, Apply button (stop → apply → restart)</li>
+            <li><em>Presets tab</em>: Export → <code>GtkFileChooserNative</code> save writes <code>getPresetList()</code> JSON; Import → reads JSON and calls <code>applyPreset()</code> per slot</li>
+            <li>Settings saved via <code>AppSettings::save()</code> on dialog confirm</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Port selection changes survive app restart</li>
+              <li>Import of a preset restores all four slot configurations</li>
+              <li>Changing the port while the engine is running restarts seamlessly</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M10</span>
+            <h3 class="milestone__title">Hardening, Performance, and Release Readiness</h3>
+          </div>
+          <p class="milestone__goal">Production stability and diagnosability.</p>
+          <ul class="milestone__tasks">
+            <li>Set JACK thread to <code>SCHED_FIFO</code> real-time priority via <code>jack_client_open</code> flags or <code>pthread_setschedparam</code></li>
+            <li>Add xrun counter in the status bar, updated via the 200 ms GTK poll</li>
+            <li>Log xruns and engine errors to <code>~/.local/share/opiqo/opiqo.log</code> using <code>logging_macros.h</code></li>
+            <li>Device hot-plug stress test: plug/unplug USB audio device 20× while running</li>
+            <li>Verify JACK callback is allocation-free with Valgrind <code>--tool=massif</code> and AddressSanitizer</li>
+            <li>PipeWire-JACK compatibility verification with <code>pipewire-jack</code> shim</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>60-minute soak run without xruns on a quiet system</li>
+              <li>JACK server restart recovers engine without app restart</li>
+              <li>Zero memory leaks reported by Valgrind on clean startup/shutdown</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CROSS-CUTTING REQUIREMENTS ===== -->
+    <section class="dev-section" id="requirements">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§7</span>
+          <h2 class="section__title">Cross-cutting Technical Requirements</h2>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Real-time Safety (JACK Callback)</h3>
+            <ul>
+              <li>No heap allocations inside <code>jack_process_callback</code></li>
+              <li>No mutexes that can block; use <code>LockFreeQueue</code> for plugin parameter updates</li>
+              <li>No GTK calls; communicate back to UI via <code>g_idle_add()</code></li>
+              <li>Preallocate all conversion and channel-split buffers in <code>AudioEngine::start()</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Thread Safety</h3>
+            <ul>
+              <li>GTK main thread: all widget creation, signal handlers, UI state</li>
+              <li>JACK real-time thread: <code>jack_process_callback</code> only</li>
+              <li><code>std::atomic&lt;State&gt;</code> for engine state visible to both threads</li>
+              <li><code>LockFreeQueue</code> for parameter values (main → RT direction)</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Error Handling</h3>
+            <ul>
+              <li>Surface all JACK errors in the status bar via <code>g_idle_add</code></li>
+              <li><code>jack_set_server_lost_callback</code>: move to <code>State::Error</code>, show message, revert Power toggle</li>
+              <li><code>AppSettings::load()</code> returns safe defaults on any file error</li>
+              <li>Xrun count displayed in status bar; logged to <code>opiqo.log</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Wayland / X11 Compatibility</h3>
+            <ul>
+              <li>Use <code>gtk_file_chooser_native_new()</code> for all file dialogs (required for Wayland portals)</li>
+              <li>Avoid <code>GdkX11</code> and <code>GdkWayland</code> backend-specific APIs</li>
+              <li>Use <code>gdk_display_get_default()</code> only for font/DPI queries</li>
+              <li>Test UI renders correctly under both X11 and Wayland sessions</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FILE GROUP SUMMARY ===== -->
+    <section class="dev-section" id="file-summary">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§8</span>
+          <h2 class="section__title">File Group Summary</h2>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="file-table reveal">
+            <thead>
+              <tr><th>File Group</th><th>New Files</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>App entry</td><td><code>src/main_linux.cpp</code></td></tr>
+              <tr><td>Audio platform</td><td><code>src/linux/AudioEngine.h/.cpp</code>, <code>src/linux/JackPortEnum.h/.cpp</code></td></tr>
+              <tr><td>Settings</td><td><code>src/linux/AppSettings.h/.cpp</code></td></tr>
+              <tr><td>UI shell</td><td><code>src/linux/MainWindow.h/.cpp</code>, <code>src/linux/ControlBar.h/.cpp</code></td></tr>
+              <tr><td>Plugin UX</td><td><code>src/linux/PluginSlot.h/.cpp</code>, <code>src/linux/PluginDialog.h/.cpp</code>, <code>src/linux/ParameterPanel.h/.cpp</code></td></tr>
+              <tr><td>Settings dialog</td><td><code>src/linux/SettingsDialog.h/.cpp</code></td></tr>
+              <tr><td>UI resources</td><td><code>src/linux/ui/main_window.ui</code>, <code>src/linux/ui/plugin_slot.ui</code>, <code>src/linux/opiqo.css</code>, <code>src/linux/opiqo.gresource.xml</code></td></tr>
+              <tr><td>Build</td><td><code>CMakePresets.json</code> (new preset), <code>CMakeLists.txt</code> (new target block)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TEST PLAN ===== -->
+    <section class="dev-section" id="tests">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§9</span>
+          <h2 class="section__title">Test Plan</h2>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Functional Tests</h3>
+            <ul>
+              <li>App startup with valid and missing saved JACK ports</li>
+              <li>Power toggle on/off cycles (50 repetitions)</li>
+              <li>JACK port switch while running</li>
+              <li>Add/delete plugins in all 4 slots</li>
+              <li>Parameter changes under active audio</li>
+              <li>Recording for WAV, MP3, and OGG while all slots are active</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Robustness Tests</h3>
+            <ul>
+              <li>USB audio device unplug/replug while JACK graph is active</li>
+              <li>Rapid Power toggle spam (100×)</li>
+              <li>JACK server kill and restart while engine is Running</li>
+              <li>Open Settings and Apply repeatedly during idle and Running states</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Performance Tests</h3>
+            <ul>
+              <li>CPU usage: no plugins, 1 plugin, 4 plugins</li>
+              <li>Xrun count over 10 minutes at 48 kHz / 256-frame buffer</li>
+              <li>Latency: compare 256-frame vs 1024-frame buffer sizes</li>
+              <li>60-minute soak run (release readiness)</li>
+              <li>Valgrind <code>--tool=massif</code> for JACK callback allocations</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PREREQUISITES ===== -->
+    <section class="dev-section" id="prerequisites">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§10</span>
+          <h2 class="section__title">Prerequisites</h2>
+          <p class="section__desc">Install these packages before building. Ensure JACK is running before launching Opiqo (or use PipeWire's JACK compatibility layer).</p>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Debian / Ubuntu</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>sudo apt install \
+  libgtk-4-dev \
+  libjack-jackd2-dev \
+  liblilv-dev \
+  libsndfile1-dev \
+  libmp3lame-dev \
+  libopus-dev \
+  libopusenc-dev \
+  cmake make pkg-config</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>Fedora / RHEL</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>sudo dnf install \
+  gtk4-devel \
+  jack-audio-connection-kit-devel \
+  lilv-devel \
+  libsndfile-devel \
+  lame-devel \
+  opus-devel \
+  opusenc-devel \
+  cmake make pkg-config</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>PipeWire Setup (Modern Distros)</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code># Most modern distros ship PipeWire
+# with the JACK compatibility layer.
+# Verify it is active:
+pw-jack --version
+
+# Or install explicitly:
+sudo apt install pipewire-jack    # Debian
+sudo dnf install pipewire-jack-audio-connection-kit  # Fedora
+
+# Run opiqo via pw-jack if needed:
+pw-jack ./build-linux/opiqo</code></pre>
+          </div>
+        </div>
+
+        <div class="req-card reveal" style="max-width: 700px; margin-top: 1.5rem;">
+          <h3>Sequencing Recommendation</h3>
+          <ol style="color: #94a3b8; font-size: .9rem; line-height: 2; padding-left: 1.25rem; margin: 0;">
+            <li><strong>M0–M3</strong> — Build wiring → JACK pass-through → DSP integration (audio first)</li>
+            <li><strong>M4–M6</strong> — Transport state machine → shell layout → plugin management</li>
+            <li><strong>M7–M9</strong> — Parameter UI → recording → settings</li>
+            <li><strong>M10</strong> — Hardening and release readiness</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+          <span class="logo-icon" aria-hidden="true">🎸</span>
+          <span class="logo-text">opiqo</span>
+        </a>
+        <p class="footer__tagline">Professional LV2 Guitar Effects for Every Platform.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer navigation">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Linux Docs</h4>
+          <a href="#objective" class="footer__link">Objective</a>
+          <a href="#architecture" class="footer__link">Architecture</a>
+          <a href="#milestones" class="footer__link">Milestones</a>
+          <a href="#build" class="footer__link">Build System</a>
+          <a href="#tests" class="footer__link">Test Plan</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Links</h4>
+          <a href="index.html" class="footer__link">Linux Project Page</a>
+          <a href="https://github.com/djshaji/opiqo-linux" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          <a href="https://github.com/djshaji/opiqo-linux/issues" class="footer__link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+          <a href="../index.html" class="footer__link">All Platforms</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Community</h4>
+          <a href="https://lv2plug.in/" class="footer__link" target="_blank" rel="noopener noreferrer">LV2 Specification</a>
+          <a href="https://jackaudio.org/" class="footer__link" target="_blank" rel="noopener noreferrer">JACK Audio</a>
+          <a href="https://pipewire.org/" class="footer__link" target="_blank" rel="noopener noreferrer">PipeWire</a>
+          <a href="https://www.gtk.org/" class="footer__link" target="_blank" rel="noopener noreferrer">GTK Project</a>
+        </div>
+      </nav>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>© 2026 Opiqo. Released under the <a href="https://github.com/djshaji/opiqo-linux/blob/main/LICENSE" class="link" target="_blank" rel="noopener noreferrer">MIT License</a>. · <a href="../privacy.html" class="link">Privacy Policy</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

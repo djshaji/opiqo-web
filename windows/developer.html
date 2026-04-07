@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Opiqo Windows Developer Guide — Architecture, build system, milestone plan, source layout, threading model, and test plan for the Win32 + WASAPI implementation." />
+  <meta property="og:title" content="Opiqo Windows Developer Guide" />
+  <meta property="og:description" content="Full developer documentation for the Opiqo Windows Win32 + WASAPI implementation. Architecture, milestones, source layout, and build instructions." />
+  <meta property="og:type" content="website" />
+  <title>Opiqo Windows — Developer Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .dev-section { padding: 4rem 0; }
+    .dev-section + .dev-section { border-top: 1px solid rgba(148,163,184,.12); }
+    .milestone { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.75rem 2rem; margin-bottom: 1.5rem; }
+    .milestone__header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .milestone__num { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; font-weight: 700; font-size: .85rem; padding: .3rem .7rem; border-radius: 6px; flex-shrink: 0; }
+    .milestone__title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary, #f1f5f9); margin: 0; }
+    .milestone__goal { color: var(--text-secondary, #94a3b8); margin: 0 0 1rem; font-size: .95rem; }
+    .milestone__tasks { color: var(--text-secondary, #94a3b8); padding-left: 1.25rem; margin: 0; font-size: .9rem; line-height: 1.8; }
+    .milestone__criteria { margin-top: 1rem; padding: .75rem 1rem; background: rgba(59,130,246,.08); border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0; }
+    .milestone__criteria p { margin: 0 0 .25rem; font-size: .85rem; font-weight: 600; color: #60a5fa; }
+    .milestone__criteria ul { margin: 0; padding-left: 1.1rem; color: var(--text-secondary, #94a3b8); font-size: .85rem; line-height: 1.8; }
+    .arch-diagram { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 2rem; text-align: center; font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; font-size: .85rem; line-height: 1.9; color: var(--text-secondary, #94a3b8); white-space: pre; overflow-x: auto; }
+    .file-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+    .file-table th { text-align: left; padding: .75rem 1rem; background: rgba(59,130,246,.1); color: #60a5fa; font-size: .85rem; font-weight: 600; border-bottom: 1px solid rgba(148,163,184,.12); }
+    .file-table td { padding: .75rem 1rem; border-bottom: 1px solid rgba(148,163,184,.08); color: var(--text-secondary, #94a3b8); font-size: .85rem; vertical-align: top; }
+    .file-table td code { font-size: .82rem; background: rgba(59,130,246,.08); padding: .1rem .35rem; border-radius: 4px; color: #93c5fd; }
+    .dev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .req-card { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem; }
+    .req-card h3 { color: var(--text-primary, #f1f5f9); font-size: 1rem; font-weight: 700; margin: 0 0 1rem; }
+    .req-card ul { margin: 0; padding-left: 1.15rem; color: var(--text-secondary, #94a3b8); font-size: .88rem; line-height: 2; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: .25rem .65rem; border-radius: 20px; font-size: .78rem; font-weight: 600; }
+    .badge--blue { background: rgba(59,130,246,.15); color: #60a5fa; }
+    .badge--green { background: rgba(34,197,94,.1); color: #4ade80; }
+    .badge--sky { background: rgba(14,165,233,.12); color: #38bdf8; }
+    .toc { background: var(--card-bg, #0f172a); border: 1px solid rgba(148,163,184,.12); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 3rem; }
+    .toc h2 { font-size: 1rem; font-weight: 700; color: var(--text-primary, #f1f5f9); margin: 0 0 .75rem; }
+    .toc ol { margin: 0; padding-left: 1.25rem; }
+    .toc li { margin: .3rem 0; }
+    .toc a { color: #60a5fa; text-decoration: none; font-size: .9rem; }
+    .toc a:hover { text-decoration: underline; }
+    .scope-tag { display: inline-block; font-size: .75rem; font-weight: 600; padding: .15rem .5rem; border-radius: 4px; margin-left: .4rem; background: rgba(59,130,246,.12); color: #60a5fa; vertical-align: middle; }
+    .scope-tag--out { background: rgba(148,163,184,.08); color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+        <span class="logo-icon" aria-hidden="true">🎸</span>
+        <span class="logo-text">opiqo</span>
+      </a>
+      <nav class="navbar__nav" id="navMenu" aria-label="Main navigation">
+        <a href="index.html" class="nav-link">Windows</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#milestones" class="nav-link">Milestones</a>
+        <a href="#build" class="nav-link">Build</a>
+        <a href="https://github.com/djshaji/opiqo-windows" class="nav-link nav-link--cta" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <button class="navbar__hamburger" id="hamburgerBtn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="hero" style="padding-bottom: 2rem;">
+      <div class="container hero__inner">
+        <div class="hero__text">
+          <span class="hero__badge">Developer Guide · Windows</span>
+          <h1 class="hero__title">Opiqo Windows<br /><span class="gradient-text">Implementation Guide</span></h1>
+          <p class="hero__sub">Complete technical documentation for the Opiqo Windows port — a native Win32 desktop LV2 plugin host built on WASAPI audio. Covers architecture, source layout, CMake build system, 11-milestone delivery plan, threading model, scope, and test strategy.</p>
+          <div class="hero__ctas">
+            <a href="https://github.com/djshaji/opiqo-windows/releases/download/30/opiqo-setup.exe" class="btn btn--primary">
+              <svg class="btn__icon" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+              Download Installer
+            </a>
+            <a href="https://github.com/djshaji/opiqo-windows" class="btn btn--secondary" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+            <a href="index.html" class="btn btn--secondary">Windows Project Page</a>
+          </div>
+          <div class="badge-row" style="margin-top: 1.5rem;">
+            <span class="badge badge--blue">Win32 API</span>
+            <span class="badge badge--blue">WASAPI</span>
+            <span class="badge badge--blue">C++17</span>
+            <span class="badge badge--blue">CMake 3.22+</span>
+            <span class="badge badge--green">MIT License</span>
+            <span class="badge badge--sky">MinGW cross-compile</span>
+            <span class="badge badge--sky">MMCSS Real-time</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TABLE OF CONTENTS ===== -->
+    <section style="padding: 1rem 0 2rem;">
+      <div class="container">
+        <div class="toc">
+          <h2>Table of Contents</h2>
+          <ol>
+            <li><a href="#objective">Objective</a></li>
+            <li><a href="#scope">Scope and Non-Goals</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#milestones">Milestone Plan</a></li>
+            <li><a href="#requirements">Cross-cutting Requirements</a></li>
+            <li><a href="#file-summary">File Group Summary</a></li>
+            <li><a href="#tests">Test Plan</a></li>
+            <li><a href="#build">Build System</a></li>
+            <li><a href="#sequencing">Sequencing Recommendation</a></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== OBJECTIVE ===== -->
+    <section class="dev-section" id="objective">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§1</span>
+          <h2 class="section__title">Objective</h2>
+        </div>
+        <p style="color: var(--text-secondary, #94a3b8); max-width: 760px; line-height: 1.8; font-size: 1rem;">
+          Build a production-ready Windows LV2 host that runs low-latency duplex audio with WASAPI, processes audio through <code>LiveEffectEngine</code> in real time, provides a Win32 desktop UI with 4 plugin slots in a 2×2 layout, and supports device selection, transport power toggle, and recording.
+        </p>
+        <div class="download-card reveal" style="max-width: 600px; margin-top: 1.5rem;">
+          <h3 style="color: var(--text-primary, #f1f5f9); margin: 0 0 .75rem; font-size: 1rem;">Primary Runtime Path</h3>
+          <pre><code>Audio input (WASAPI capture endpoint)
+  → LiveEffectEngine::process(input, output, frames)
+    → Audio output (WASAPI render endpoint)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCOPE ===== -->
+    <section class="dev-section" id="scope">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§2</span>
+          <h2 class="section__title">Scope and Non-Goals</h2>
+        </div>
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>In Scope <span class="scope-tag">v1.0</span></h3>
+            <ul>
+              <li>Win32 main window, dialogs, status bar, and control bar</li>
+              <li>WASAPI shared/exclusive duplex stream management</li>
+              <li>Input/output endpoint selection and hot-plug handling via <code>IMMNotificationClient</code></li>
+              <li>Power toggle state machine: Off, Starting, Running, Stopping, Error</li>
+              <li>Plugin add/delete/enable/parameter UI mapped to <code>LiveEffectEngine</code> APIs</li>
+              <li>Recording controls with format (WAV/MP3/OGG) and quality selection</li>
+              <li>Settings dialog: sample rate, block size, share mode, endpoint pickers</li>
+              <li>Preset import/export via <code>getPresetList</code>/<code>applyPreset</code></li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Out of Scope <span class="scope-tag scope-tag--out">v1.0</span></h3>
+            <ul>
+              <li>Advanced theming and skinning</li>
+              <li>MIDI mapping and automation lanes</li>
+              <li>Sandboxed plugin process isolation</li>
+              <li>VST / AU / CLAP plugin formats</li>
+              <li>Multi-channel (5.1+) routing</li>
+              <li>Network/remote control features</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ARCHITECTURE ===== -->
+    <section class="dev-section" id="architecture">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§3</span>
+          <h2 class="section__title">Architecture</h2>
+          <p class="section__desc">Three cleanly separated layers with explicit thread ownership. The DSP layer is shared verbatim with the Linux and Android builds.</p>
+        </div>
+
+        <div class="arch-diagram reveal">┌──────────────────────────────────────┐
+│           Win32 UI Layer             │
+│  MainWindow, PluginSlot, ControlBar, │
+│  PluginDialog, SettingsDialog        │
+│  Thread: UI/message thread           │
+└─────────────────┬────────────────────┘
+                  │  calls (PostMessage for replies)
+┌─────────────────▼────────────────────┐
+│        Audio Platform Layer          │
+│  AudioEngine (WASAPI stream),        │
+│  WasapiDeviceEnum (IMMNotification)  │
+│  Thread: dedicated real-time thread  │
+└─────────────────┬────────────────────┘
+                  │  calls (lock-free param queue)
+┌─────────────────▼────────────────────┐
+│           DSP Host Layer             │
+│  LiveEffectEngine + LV2Plugin        │
+│  (shared with Linux + Android)       │
+└──────────────────────────────────────┘</div>
+
+        <div class="dev-grid reveal" style="margin-top: 2rem;">
+          <div class="req-card">
+            <h3>Layer Ownership</h3>
+            <ul>
+              <li><strong>AudioEngine</strong> owns all COM/WASAPI resources and the real-time audio thread</li>
+              <li><strong>LiveEffectEngine</strong> owns the plugin graph state and processing</li>
+              <li><strong>UI layer</strong> owns user intents, persisted preferences, and state presentation</li>
+              <li>UI thread and audio thread communicate via preallocated lock-free buffers and posted window messages</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>State Machine</h3>
+            <ul>
+              <li><code>Off → Starting → Running</code> (Power toggle on)</li>
+              <li><code>Running → Stopping → Off</code> (Power toggle off)</li>
+              <li><code>Any → Error</code> on WASAPI failure or device loss</li>
+              <li>Duplicate On/Off requests are ignored safely</li>
+              <li>Start failure keeps app in safe <code>Off</code> state</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>AudioEngine API</h3>
+            <pre style="font-size: .8rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>bool start(
+  const std::string&amp; inputDeviceId,
+  const std::string&amp; outputDeviceId,
+  int sampleRate,
+  int blockSize,
+  ShareMode shareMode
+);
+void stop();
+
+enum class State {
+  Off, Starting, Running,
+  Stopping, Error
+};
+
+State       state()        const;
+std::string errorMessage() const;
+uint32_t    dropoutCount() const;</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MILESTONES ===== -->
+    <section class="dev-section" id="milestones">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§4</span>
+          <h2 class="section__title">Milestone Plan</h2>
+          <p class="section__desc">11 milestones ordered to prove the real-time audio path first, then build the UI on top. Each milestone has concrete deliverables and acceptance criteria.</p>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M0</span>
+            <h3 class="milestone__title">Project Skeleton and Build Wiring</h3>
+          </div>
+          <p class="milestone__goal">Create Windows-specific source structure and compile target.</p>
+          <ul class="milestone__tasks">
+            <li>Add source files under <code>src/win32/</code> and <code>src/main_win32.cpp</code></li>
+            <li>Update CMake target for MinGW cross-build with required Windows libs (<code>ole32</code>, <code>uuid</code>, <code>mmdevapi</code>)</li>
+            <li>Add resource files (<code>resource.h</code>, <code>app.rc</code>) and a minimal menu</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>App launches to a blank or minimal Win32 window</li>
+              <li>Clean compile in Debug; binary runs on Windows without missing DLL/runtime errors</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M1</span>
+            <h3 class="milestone__title">WASAPI Device Enumeration and Selection Model</h3>
+          </div>
+          <p class="milestone__goal">Build stable endpoint discovery and selection storage.</p>
+          <ul class="milestone__tasks">
+            <li><strong>WasapiDeviceEnum</strong>: implement capture/render listing; return <code>DeviceInfo { id, friendlyName, isDefault }</code>; implement <code>IMMNotificationClient</code> change notifications</li>
+            <li><strong>AppSettings</strong>: fields <code>inputDeviceId</code>, <code>outputDeviceId</code>, <code>sampleRate</code>, <code>blockSize</code>, <code>shareMode</code>, <code>recordFormat</code>, <code>recordQuality</code></li>
+            <li>Implement load/save at startup/shutdown to <code>%APPDATA%\Opiqo\settings.json</code></li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Device hot-plug refreshes list without requiring app restart</li>
+              <li>Missing saved device falls back to default system endpoint</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M2</span>
+            <h3 class="milestone__title">AudioEngine Core (Pass-Through, No DSP)</h3>
+          </div>
+          <p class="milestone__goal">Prove full-duplex WASAPI pipeline and stream lifecycle.</p>
+          <ul class="milestone__tasks">
+            <li>Implement <code>AudioEngine::start()</code> / <code>stop()</code> with <code>sampleRate</code>, <code>blockSize</code>, <code>deviceIds</code>, <code>shareMode</code></li>
+            <li>Initialization sequence: <code>CoInitializeEx</code>, device activation, format negotiation, event-callback mode</li>
+            <li>Dedicated real-time audio thread — no allocations in the loop; MMCSS priority set via <code>AvSetMmThreadCharacteristics</code></li>
+            <li>Basic pass-through path without <code>LiveEffectEngine</code> processing</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>15-minute pass-through run without crash or dropout</li>
+              <li>Stop/start repeated 50 times without leaked COM handles</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M3</span>
+            <h3 class="milestone__title">LiveEffectEngine Integration in Audio Thread</h3>
+          </div>
+          <p class="milestone__goal">Insert DSP host into capture → render loop.</p>
+          <ul class="milestone__tasks">
+            <li>Replace pass-through with <code>LiveEffectEngine::process(input, output, frames)</code></li>
+            <li>Implement buffer conversion path supporting float and fallback format conversion from WASAPI PCM</li>
+            <li>Verify stereo channel handling for the process path</li>
+            <li>Validate bypass: with no plugins loaded, signal passes through cleanly</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>With no plugins loaded: audible clean pass-through</li>
+              <li>With plugins loaded: audible effect processing in slot order</li>
+              <li>No allocations in the hot path (verified with Application Verifier)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M4</span>
+            <h3 class="milestone__title">Power Toggle State Machine and Transport Control</h3>
+          </div>
+          <p class="milestone__goal">Make the power toggle the single source of truth for engine transport state.</p>
+          <ul class="milestone__tasks">
+            <li>Implement atomic engine state: <code>Off</code>, <code>Starting</code>, <code>Running</code>, <code>Stopping</code>, <code>Error</code></li>
+            <li>Wire <code>ControlBar</code> power toggle: On → <code>AudioEngine::start()</code> with selected endpoints; Off → <code>stop()</code></li>
+            <li>Keep toggle On only after successful start; revert to Off on failure</li>
+            <li>Error path surfaces message in status bar; keeps app in safe state</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Duplicate On/Off requests are ignored safely</li>
+              <li>Error path transitions to <code>Error</code> and exposes message in status bar</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M5</span>
+            <h3 class="milestone__title">MainWindow Layout and 2×2 Plugin Slot Grid</h3>
+          </div>
+          <p class="milestone__goal">Implement the required desktop layout with proper resizing.</p>
+          <ul class="milestone__tasks">
+            <li>Create main frame with menu bar and status bar</li>
+            <li>Implement 2×2 slot region: top row (Slot 1, Slot 2); bottom row (Slot 3, Slot 4)</li>
+            <li>Add <code>ControlBar</code>: Power toggle, Gain slider, Record button, format dropdown, device selectors</li>
+            <li>Handle <code>WM_SIZE</code> to keep slots proportional; enforce minimum size 900 × 650</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Layout remains usable and proportional at minimum size 900 × 650</li>
+              <li>Resizing preserves slot proportions and control visibility</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M6</span>
+            <h3 class="milestone__title">Plugin Management UI</h3>
+          </div>
+          <p class="milestone__goal">Connect plugin lifecycle controls to existing <code>LiveEffectEngine</code> APIs.</p>
+          <ul class="milestone__tasks">
+            <li><strong>PluginDialog</strong>: data source from <code>getAvailablePlugins()</code>; list view with name filter</li>
+            <li>Per-slot controls: Add plugin, Bypass/Enable toggle, Delete plugin</li>
+            <li>Reflect active plugin name and bypass status in the slot header label</li>
+            <li>All slot operations are independent; UI remains responsive during plugin load</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Each of the 4 slots independently manages its plugin instance</li>
+              <li>UI remains responsive during plugin add/delete operations</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M7</span>
+            <h3 class="milestone__title">Dynamic Parameter Panels</h3>
+          </div>
+          <p class="milestone__goal">Build runtime-generated Win32 controls from plugin port metadata.</p>
+          <ul class="milestone__tasks">
+            <li>Generate controls per port type: Float (range) → trackbar/slider; Toggle → checkbox; Enumeration → combobox; Atom file path → Browse button + <code>GetOpenFileName</code></li>
+            <li>Implement value mapping: min/max/default clamp; on-change calls <code>engine_-&gt;setValue(slot, portIdx, value)</code></li>
+            <li>Ensure real-time-safe parameter handoff — enqueue to lock-free buffer consumed in audio thread</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Control movements update sound in real time without dropouts</li>
+              <li>No audible glitches from rapid slider movements</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M8</span>
+            <h3 class="milestone__title">Recording UX and Format Handling</h3>
+          </div>
+          <p class="milestone__goal">Complete recording workflow from the UI.</p>
+          <ul class="milestone__tasks">
+            <li>Record button: on → <code>engine_-&gt;startRecording(fd, format, quality)</code>; off → <code>stopRecording()</code></li>
+            <li>Bind format dropdown: 0=WAV, 1=MP3, 2=OGG; show/hide quality selector for lossy formats only</li>
+            <li>Connect selected format/quality to <code>startRecording</code> arguments</li>
+            <li>Output file saved to <code>%USERPROFILE%\Music\</code> with timestamp filename</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Recorded files open successfully in external players without corruption</li>
+              <li>Record can run while all 4 plugin slots are actively processing</li>
+              <li>File is finalized cleanly even if the app exits during recording</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M9</span>
+            <h3 class="milestone__title">Settings Dialog and Runtime Reconfiguration</h3>
+          </div>
+          <p class="milestone__goal">Enable configurable audio preferences and preset import/export.</p>
+          <ul class="milestone__tasks">
+            <li><strong>Audio settings tab</strong>: sample rate, block size, share mode; explicit input/output endpoint pickers populated by <code>WasapiDeviceEnum</code></li>
+            <li><strong>Apply flow</strong>: if engine is running → stop → apply settings → restart with new values</li>
+            <li><strong>Presets tab</strong>: Export → <code>GetSaveFileName</code> dialog → writes <code>getPresetList()</code> to JSON; Import → <code>GetOpenFileName</code> → reads JSON → calls <code>applyPreset()</code> per slot</li>
+            <li>Settings saved via <code>AppSettings::save()</code> on dialog OK</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>Settings survive app restart</li>
+              <li>Unsupported setting combinations fail gracefully with a fallback</li>
+              <li>Import of a preset restores all four slot configurations</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="milestone reveal">
+          <div class="milestone__header">
+            <span class="milestone__num">M10</span>
+            <h3 class="milestone__title">Hardening, Performance, and Release Readiness</h3>
+          </div>
+          <p class="milestone__goal">Production stability and diagnosability.</p>
+          <ul class="milestone__tasks">
+            <li>Add rate-limited error logging to <code>%APPDATA%\Opiqo\opiqo.log</code> using <code>logging_macros.h</code></li>
+            <li>Add MMCSS priority setup for the audio thread via <code>AvSetMmThreadCharacteristics</code></li>
+            <li>Device hot-plug stress test: unplug/replug USB audio device 20× while running</li>
+            <li>Verify no blocking operations in the audio loop (no mutex, no <code>malloc</code>, no Win32 waits)</li>
+            <li>Dropout counter displayed in the status bar</li>
+          </ul>
+          <div class="milestone__criteria">
+            <p>Acceptance Criteria</p>
+            <ul>
+              <li>60-minute continuous run without dropout under normal load</li>
+              <li>Device loss/recovery path works without app restart</li>
+              <li>Zero memory leaks on clean startup/shutdown (verified with Application Verifier or Dr. Memory)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CROSS-CUTTING REQUIREMENTS ===== -->
+    <section class="dev-section" id="requirements">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§5</span>
+          <h2 class="section__title">Cross-cutting Technical Requirements</h2>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Real-time Safety (Audio Loop)</h3>
+            <ul>
+              <li>No heap allocations inside the WASAPI callback loop</li>
+              <li>No blocking UI locks inside the audio loop</li>
+              <li>Preallocate all conversion and transfer buffers in <code>AudioEngine::start()</code></li>
+              <li>Lock-free queue for plugin parameter updates from UI thread</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Threading</h3>
+            <ul>
+              <li>UI thread handles all window messages and user actions</li>
+              <li>AudioEngine thread handles capture/process/render only</li>
+              <li>Long operations (plugin load, file I/O) must not block the UI thread</li>
+              <li><code>PostMessage</code> used to marshal audio events back to the UI thread</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Error Handling</h3>
+            <ul>
+              <li>Surface all critical WASAPI failures in the status bar</li>
+              <li>On start failure, keep app in safe <code>Off</code> state with error message</li>
+              <li>Handle invalidated/lost devices with a recoverable workflow</li>
+              <li><code>AppSettings::load()</code> returns safe defaults on any file error</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>COM Initialization</h3>
+            <ul>
+              <li><code>CoInitializeEx(nullptr, COINIT_MULTITHREADED)</code> on the audio thread</li>
+              <li><code>CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED)</code> on the UI thread</li>
+              <li>All WASAPI interfaces released before <code>CoUninitialize</code></li>
+              <li>Smart pointer wrappers (<code>ComPtr</code> / <code>CComPtr</code>) to prevent leaks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FILE GROUP SUMMARY ===== -->
+    <section class="dev-section" id="file-summary">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§6</span>
+          <h2 class="section__title">File Group Summary</h2>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="file-table reveal">
+            <thead>
+              <tr><th>File Group</th><th>Files</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>App entry</td><td><code>src/main_win32.cpp</code></td></tr>
+              <tr><td>UI shell</td><td><code>src/win32/MainWindow.h/.cpp</code>, <code>src/win32/ControlBar.h/.cpp</code>, <code>src/win32/resource.h</code>, <code>src/win32/app.rc</code></td></tr>
+              <tr><td>Audio platform</td><td><code>src/win32/AudioEngine.h/.cpp</code>, <code>src/win32/WasapiDeviceEnum.h/.cpp</code></td></tr>
+              <tr><td>Plugin UX</td><td><code>src/win32/PluginSlot.h/.cpp</code>, <code>src/win32/PluginDialog.h/.cpp</code></td></tr>
+              <tr><td>Settings &amp; presets</td><td><code>src/win32/SettingsDialog.h/.cpp</code>, <code>src/win32/AppSettings.h/.cpp</code></td></tr>
+              <tr><td>Shared DSP (unchanged)</td><td><code>src/LiveEffectEngine.h/.cpp</code>, <code>src/LV2Plugin.hpp</code>, <code>src/FileWriter.h/.cpp</code>, <code>src/LockFreeQueue.h/.cpp</code></td></tr>
+              <tr><td>Build</td><td><code>CMakePresets.json</code> (windows preset), <code>CMakeLists.txt</code> (windows target block)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TEST PLAN ===== -->
+    <section class="dev-section" id="tests">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§7</span>
+          <h2 class="section__title">Test Plan</h2>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Functional Tests</h3>
+            <ul>
+              <li>App startup with valid and missing saved devices</li>
+              <li>Power toggle on/off cycles (50 repetitions)</li>
+              <li>Input/output device switch while engine is running</li>
+              <li>Add/delete plugins in all 4 slots</li>
+              <li>Parameter changes under active audio</li>
+              <li>Recording for each supported format (WAV, MP3, OGG)</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Robustness Tests</h3>
+            <ul>
+              <li>USB headset unplug/replug while engine is running</li>
+              <li>Rapid power toggle spam (100×)</li>
+              <li>Open Settings and Apply repeatedly during idle and running states</li>
+              <li>Shared mode ↔ exclusive mode switch at runtime</li>
+            </ul>
+          </div>
+          <div class="req-card">
+            <h3>Performance Tests</h3>
+            <ul>
+              <li>CPU usage: no plugins, 1 plugin, 4 plugins</li>
+              <li>Dropout/glitch count under stress: 10 minutes at 48 kHz / 256-sample buffer</li>
+              <li>Latency: shared vs exclusive mode comparison</li>
+              <li>60-minute soak run (release readiness)</li>
+              <li>Application Verifier / Dr. Memory for leak detection</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== BUILD SYSTEM ===== -->
+    <section class="dev-section" id="build">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§8</span>
+          <h2 class="section__title">Build System</h2>
+          <p class="section__desc">Windows builds use the <code>windows-default</code> CMake preset. Cross-compilation from Linux is supported via MinGW-w64.</p>
+        </div>
+
+        <div class="dev-grid reveal">
+          <div class="req-card">
+            <h3>Native Windows Build (MSVC)</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>git clone https://github.com/djshaji/opiqo-windows.git
+cd opiqo-windows
+
+# Configure
+cmake --preset windows-default
+
+# Build
+cmake --build build-windows --config Release -j4</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>Cross-compile from Linux (MinGW)</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>sudo apt install mingw-w64
+
+git clone https://github.com/djshaji/opiqo-windows.git
+cd opiqo-windows
+
+cmake --preset windows-cross
+cmake --build build-windows-cross -j$(nproc)</code></pre>
+          </div>
+          <div class="req-card">
+            <h3>CMakePresets.json — windows preset</h3>
+            <pre style="font-size: .82rem; line-height: 1.7; color: #94a3b8; margin: 0;"><code>{
+  "name": "windows-default",
+  "displayName": "Windows (Win32 + WASAPI)",
+  "binaryDir": "${sourceDir}/build-windows",
+  "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Release",
+    "OPIQO_TARGET_PLATFORM": "windows"
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SEQUENCING ===== -->
+    <section class="dev-section" id="sequencing">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">§9</span>
+          <h2 class="section__title">Sequencing Recommendation</h2>
+          <p class="section__desc">This order minimises risk by proving the real-time audio path early before investing heavily in UI complexity.</p>
+        </div>
+        <div class="req-card reveal" style="max-width: 680px;">
+          <ol style="color: #94a3b8; font-size: .9rem; line-height: 2.2; padding-left: 1.25rem; margin: 0;">
+            <li><strong>M0–M3</strong> — Project skeleton → WASAPI device enum → AudioEngine pass-through → DSP integration. <em>Audio foundation first.</em></li>
+            <li><strong>M4–M6</strong> — Transport state machine → shell layout → plugin management. <em>Core UI on proven audio.</em></li>
+            <li><strong>M7–M9</strong> — Dynamic parameter panels → recording UX → settings dialog. <em>Full feature surface.</em></li>
+            <li><strong>M10</strong> — Hardening, MMCSS priority, logging, soak tests. <em>Release readiness.</em></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+          <span class="logo-icon" aria-hidden="true">🎸</span>
+          <span class="logo-text">opiqo</span>
+        </a>
+        <p class="footer__tagline">Professional LV2 Guitar Effects for Every Platform.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer navigation">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Windows Docs</h4>
+          <a href="#objective" class="footer__link">Objective</a>
+          <a href="#architecture" class="footer__link">Architecture</a>
+          <a href="#milestones" class="footer__link">Milestones</a>
+          <a href="#build" class="footer__link">Build System</a>
+          <a href="#tests" class="footer__link">Test Plan</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Links</h4>
+          <a href="index.html" class="footer__link">Windows Project Page</a>
+          <a href="https://github.com/djshaji/opiqo-windows" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          <a href="https://github.com/djshaji/opiqo-windows/releases" class="footer__link" target="_blank" rel="noopener noreferrer">Releases</a>
+          <a href="https://github.com/djshaji/opiqo-windows/issues" class="footer__link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+          <a href="../index.html" class="footer__link">All Platforms</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Resources</h4>
+          <a href="https://lv2plug.in/" class="footer__link" target="_blank" rel="noopener noreferrer">LV2 Specification</a>
+          <a href="https://docs.microsoft.com/en-us/windows/win32/coreaudio/wasapi" class="footer__link" target="_blank" rel="noopener noreferrer">WASAPI Docs</a>
+          <a href="https://docs.microsoft.com/en-us/windows/win32/wmformat/windows-media-format-sdk" class="footer__link" target="_blank" rel="noopener noreferrer">Win32 Audio</a>
+          <a href="../linux/developer.html" class="footer__link">Linux Dev Guide</a>
+        </div>
+      </nav>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>© 2026 Opiqo. Released under the <a href="https://github.com/djshaji/opiqo-windows/blob/main/LICENSE" class="link" target="_blank" rel="noopener noreferrer">MIT License</a>. · <a href="../privacy.html" class="link">Privacy Policy</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

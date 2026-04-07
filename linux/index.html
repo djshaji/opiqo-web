@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Opiqo for Linux — Native GTK4 LV2 guitar multi-effects pedalboard using JACK Audio. Real-time DSP, 4 plugin slots, PipeWire compatible, X11 and Wayland support." />
+  <meta property="og:title" content="Opiqo Linux — GTK4 Guitar Multi-Effects Pedalboard" />
+  <meta property="og:description" content="Native GTK4 LV2 host for Linux. JACK / PipeWire audio, 2×2 plugin slot grid, SCHED_FIFO real-time thread, X11 and Wayland compatible." />
+  <meta property="og:type" content="website" />
+  <title>Opiqo Linux — GTK4 Guitar Multi-Effects Pedalboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+        <span class="logo-icon" aria-hidden="true">🎸</span>
+        <span class="logo-text">opiqo</span>
+      </a>
+      <nav class="navbar__nav" id="navMenu" aria-label="Main navigation">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+        <a href="#requirements" class="nav-link">Requirements</a>
+        <a href="#download" class="nav-link nav-link--cta">Download</a>
+      </nav>
+      <button class="navbar__hamburger" id="hamburgerBtn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="hero">
+      <div class="container hero__inner">
+        <div class="hero__text">
+          <span class="hero__badge">Linux · GTK4 · JACK Audio</span>
+          <h1 class="hero__title">Native Guitar Effects<br /><span class="gradient-text">Pedalboard for Linux</span></h1>
+          <p class="hero__sub">A full-featured GTK4 desktop LV2 plugin host powered by JACK Audio Connection Kit. Low-latency real-time processing with <code>SCHED_FIFO</code> priority, 2×2 plugin slot grid, and native support for both X11 and Wayland. Works transparently on modern PipeWire systems via the JACK compatibility layer.</p>
+          <div class="hero__ctas">
+            <a href="https://github.com/djshaji/opiqo-linux" class="btn btn--primary" target="_blank" rel="noopener noreferrer">
+              <svg class="btn__icon" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              View on GitHub
+            </a>
+            <a href="#download" class="btn btn--secondary">
+              Build from Source
+            </a>
+            <a href="developer.html" class="btn btn--secondary">
+              Developer Docs
+            </a>
+          </div>
+          <p class="hero__note">Free &amp; Open Source · MIT License</p>
+        </div>
+        <div class="hero__visual">
+          <div class="hero__screenshot-wrap">
+            <img src="../assets/screenshots/linux-app.png" alt="Opiqo Linux GTK4 app showing the 2x2 plugin slot grid layout" class="hero__screenshot" loading="eager" />
+            <div class="hero__badge-float hero__badge-float--plugins">GTK4 Native UI</div>
+            <div class="hero__badge-float hero__badge-float--rt">JACK Real-time</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section class="section features" id="features">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">Linux-specific Capabilities</span>
+          <h2 class="section__title">Built for the Linux Desktop</h2>
+          <p class="section__desc">Every component designed with Linux audio conventions and GTK4 best practices. The shared DSP core (<code>LiveEffectEngine</code>) runs unchanged from the Windows build — only the audio and UI platform layers are Linux-specific.</p>
+        </div>
+        <div class="features__grid">
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 class="feature-card__title">JACK / PipeWire Audio</h3>
+            <p class="feature-card__desc">Full-duplex audio via JACK Audio Connection Kit. Works identically on classic JACK2 and modern PipeWire systems via the <code>pipewire-jack</code> compatibility shim — no configuration required.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <h3 class="feature-card__title">GTK4 Native UI</h3>
+            <p class="feature-card__desc">Full GTK4 desktop interface with a 2×2 plugin slot grid built using <code>GtkGrid</code>. Layout defined in GtkBuilder XML (<code>.ui</code> files) and styled via <code>GtkCssProvider</code>.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a3 3 0 013 3v7a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v3M8 22h8"/></svg>
+            </div>
+            <h3 class="feature-card__title">SCHED_FIFO Real-time Thread</h3>
+            <p class="feature-card__desc">The JACK audio callback runs at <code>SCHED_FIFO</code> real-time priority, fully allocation-free and mutex-free. Parameter updates flow through a <code>LockFreeQueue</code> to avoid any priority inversion.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+            </div>
+            <h3 class="feature-card__title">LV2 Plugin Host</h3>
+            <p class="feature-card__desc">Full LV2 host using Lilv. 54 bundled guitar effects included out of the box. Browse and filter plugins by name in the <code>GtkListView</code>-based plugin dialog.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            </div>
+            <h3 class="feature-card__title">X11 &amp; Wayland Compatible</h3>
+            <p class="feature-card__desc">Uses only portable GTK4 APIs. No backend-specific <code>GdkX11</code> or <code>GdkWayland</code> calls. File dialogs use <code>GtkFileChooserNative</code> for full Wayland / Flatpak portal compatibility.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4H9l-1 4h8l-1-4z"/></svg>
+            </div>
+            <h3 class="feature-card__title">XDG-Compliant Settings</h3>
+            <p class="feature-card__desc">Settings stored at <code>~/.config/opiqo/settings.json</code> following the XDG Base Directory Specification. Includes capture/playback port, recording format, quality, and gain.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <h3 class="feature-card__title">Multi-format Recording</h3>
+            <p class="feature-card__desc">Record the post-FX signal to WAV, MP3, or OGG via <code>FileWriter</code> and <code>LiveEffectEngine</code>. Output saved to <code>~/Music/</code> with a timestamp filename. Recording works while all 4 slots are active.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <h3 class="feature-card__title">Hot-plug Device Detection</h3>
+            <p class="feature-card__desc">JACK port registration callbacks (<code>jack_set_port_registration_callback</code>) refresh available capture and playback ports automatically when a USB audio device is connected or disconnected.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path d="M12 12v5M9.5 14.5l2.5-2.5 2.5 2.5"/></svg>
+            </div>
+            <h3 class="feature-card__title">Preset Import / Export</h3>
+            <p class="feature-card__desc">Export your full pedalboard configuration to a JSON file via <code>GtkFileChooserNative</code>. Import on any device running Opiqo — presets are shared across Android, Windows, and Linux.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ARCHITECTURE ===== -->
+    <section class="section how-it-works" id="architecture">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">Architecture</span>
+          <h2 class="section__title">Three-Layer Design</h2>
+          <p class="section__desc">The Linux build is cleanly separated into GTK4 UI, JACK platform audio, and shared DSP layers. Only the top two layers are Linux-specific; the DSP core is shared verbatim with the Windows build.</p>
+        </div>
+
+        <div class="features__grid reveal" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+          <div class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <h3 class="feature-card__title">GTK4 UI Layer</h3>
+            <p class="feature-card__desc"><code>MainWindow</code>, <code>PluginSlot</code>, <code>ControlBar</code>, <code>PluginDialog</code>, <code>ParameterPanel</code>, <code>SettingsDialog</code>. All widgets run on the GTK main thread.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 class="feature-card__title">Audio Platform Layer</h3>
+            <p class="feature-card__desc"><code>AudioEngine</code> manages the JACK client lifecycle. <code>JackPortEnum</code> discovers and monitors physical audio ports. The <code>jack_process_callback</code> runs at <code>SCHED_FIFO</code> priority.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+            </div>
+            <h3 class="feature-card__title">DSP Host Layer (Shared)</h3>
+            <p class="feature-card__desc"><code>LiveEffectEngine</code> + <code>LV2Plugin</code> are shared verbatim with the Windows build. The JACK float32 buffer format matches <code>LiveEffectEngine::process()</code> exactly — no conversion needed.</p>
+          </div>
+        </div>
+
+        <div class="section__header reveal" style="margin-top: 3rem;">
+          <h3 class="section__title" style="font-size: 1.5rem;">Signal Flow</h3>
+        </div>
+        <ol class="steps" aria-label="Linux audio signal flow">
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">01</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a3 3 0 013 3v7a3 3 0 01-6 0V5a3 3 0 013-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v3M8 22h8"/></svg>
+            </div>
+            <h3 class="step__title">JACK Captures Audio</h3>
+            <p class="step__desc">JACK captures audio from the selected physical input port (e.g. <code>system:capture_1</code>) and delivers it as float32 frames to the registered process callback.</p>
+          </li>
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">02</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+            </div>
+            <h3 class="step__title">LiveEffectEngine Processes</h3>
+            <p class="step__desc"><code>LiveEffectEngine::process(input, output, frames)</code> runs each active LV2 plugin in slot order. Parameter updates from the UI are dequeued from <code>LockFreeQueue</code> — allocation-free.</p>
+          </li>
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">03</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h3 class="step__title">JACK Plays Processed Signal</h3>
+            <p class="step__desc">The processed buffer is written to the JACK playback port and connected to <code>system:playback_1/2</code>. Simultaneous recording writes the same buffer to the output file via <code>FileWriter</code>.</p>
+          </li>
+          <li class="step reveal">
+            <div class="step__number" aria-hidden="true">04</div>
+            <div class="step__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4H9l-1 4h8l-1-4z"/></svg>
+            </div>
+            <h3 class="step__title">GTK4 UI Reflects State</h3>
+            <p class="step__desc">Engine state is polled every 200 ms on the GTK main thread via <code>g_timeout_add</code>. JACK events (xruns, server loss) are marshalled back to the UI thread with <code>g_idle_add</code>.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== PLUGIN UI ===== -->
+    <section class="section platforms" id="plugin-ui">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">Plugin Interface</span>
+          <h2 class="section__title">2×2 Plugin Slot Grid</h2>
+          <p class="section__desc">Four independent plugin slots arranged in a 2×2 grid. Each slot manages its own plugin instance, bypass state, and parameter panel.</p>
+        </div>
+
+        <div class="tab-panels" style="margin-top: 2rem;">
+          <div class="tab-panel tab-panel--active" style="display: block;">
+            <div class="tab-panel__content">
+              <div class="tab-panel__info">
+                <h3 class="tab-panel__title">Plugin Slot Controls</h3>
+                <p class="tab-panel__desc">Each of the four <code>GtkFrame</code>-based plugin slots provides a consistent set of controls:</p>
+                <ul class="tab-panel__list">
+                  <li><strong>Add (+)</strong> — Opens the plugin browser dialog to load an LV2 effect</li>
+                  <li><strong>Bypass toggle</strong> — Enables or disables the loaded plugin in real-time</li>
+                  <li><strong>Delete (×)</strong> — Removes the current plugin and clears the parameter panel</li>
+                  <li><strong>Parameter panel</strong> — Dynamic GTK4 controls auto-generated from <code>LV2Plugin::PortInfo</code></li>
+                </ul>
+                <h3 class="tab-panel__title" style="margin-top: 1.5rem;">Dynamic Parameter Controls</h3>
+                <ul class="tab-panel__list">
+                  <li><strong>Float (range)</strong> → <code>GtkScale</code> horizontal slider</li>
+                  <li><strong>Float (enumeration)</strong> → <code>GtkDropDown</code> with scale-point labels</li>
+                  <li><strong>Toggle</strong> → <code>GtkCheckButton</code></li>
+                  <li><strong>Trigger</strong> → <code>GtkButton</code></li>
+                  <li><strong>File path</strong> → <code>GtkButton</code> "Browse…" using <code>GtkFileChooserNative</code></li>
+                </ul>
+              </div>
+              <div class="tab-panel__screenshot">
+                <img src="../assets/screenshots/linux-app.png" alt="Opiqo Linux GTK4 showing the 2x2 plugin slot grid with parameter panels" loading="lazy" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== REQUIREMENTS ===== -->
+    <section class="section features" id="requirements">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">System Requirements</span>
+          <h2 class="section__title">What You Need to Run Opiqo</h2>
+          <p class="section__desc">Opiqo Linux requires a reasonably modern distribution. It works on both classic JACK2 setups and modern PipeWire-based distros.</p>
+        </div>
+
+        <div class="features__grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+          <div class="feature-card reveal">
+            <h3 class="feature-card__title">Runtime Dependencies</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-secondary, #94a3b8); line-height: 2;">
+              <li>GTK4 ≥ 4.6</li>
+              <li>JACK ≥ 1.9 <em>or</em> PipeWire ≥ 0.3 with <code>pipewire-jack</code></li>
+              <li>Lilv (LV2 plugin loader)</li>
+              <li>libsndfile ≥ 1.0</li>
+              <li>libmp3lame (for MP3 recording)</li>
+              <li>libopus + libopusenc (for Opus recording)</li>
+              <li>Linux kernel with <code>SCHED_FIFO</code> support</li>
+              <li>X11 <em>or</em> Wayland compositor</li>
+            </ul>
+          </div>
+          <div class="feature-card reveal">
+            <h3 class="feature-card__title">Build Dependencies</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-secondary, #94a3b8); line-height: 2;">
+              <li>CMake ≥ 3.22</li>
+              <li>GCC ≥ 11 or Clang ≥ 14 with C++17</li>
+              <li>pkg-config</li>
+              <li>libgtk-4-dev</li>
+              <li>libjack-jackd2-dev</li>
+              <li>liblilv-dev</li>
+              <li>libsndfile1-dev</li>
+              <li>libmp3lame-dev, libopus-dev, libopusenc-dev</li>
+            </ul>
+          </div>
+          <div class="feature-card reveal">
+            <h3 class="feature-card__title">Recommended Audio Setup</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-secondary, #94a3b8); line-height: 2;">
+              <li>USB audio interface (low-latency preferred)</li>
+              <li>JACK / PipeWire buffer size: 256 frames at 48 kHz</li>
+              <li>Real-time kernel or <code>realtime-privileges</code> group membership</li>
+              <li>PulseAudio / PipeWire bridge running (for other apps)</li>
+              <li>ALSA → JACK bridge not required; JACK connects directly</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DOWNLOAD ===== -->
+    <section class="section download" id="download">
+      <div class="container">
+        <div class="section__header reveal">
+          <span class="section__eyebrow">Get Opiqo for Linux</span>
+          <h2 class="section__title">Download &amp; Build</h2>
+          <p class="section__desc">Free and open source under the MIT License. Clone the repository and build with CMake.</p>
+        </div>
+
+        <div class="download-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+
+          <div class="download-card reveal">
+            <div class="download-card__header">
+              <svg class="download-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              <h3 class="download-card__title">GitHub Release</h3>
+            </div>
+            <ul class="download-card__reqs">
+              <li>GTK4 ≥ 4.6</li>
+              <li>JACK ≥ 1.9 or PipeWire-JACK</li>
+              <li>Lilv, libsndfile</li>
+            </ul>
+            <div class="download-card__actions">
+              <a href="https://github.com/djshaji/opiqo-linux/releases" class="btn btn--primary btn--full" target="_blank" rel="noopener noreferrer">Releases on GitHub</a>
+              <a href="https://github.com/djshaji/opiqo-linux" class="btn btn--ghost btn--full" target="_blank" rel="noopener noreferrer">View Source Code</a>
+            </div>
+          </div>
+
+          <div class="download-card reveal">
+            <div class="download-card__header">
+              <svg class="download-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <h3 class="download-card__title">Debian / Ubuntu</h3>
+            </div>
+            <div class="download-card__build">
+              <pre><code>sudo apt install \
+  libgtk-4-dev \
+  libjack-jackd2-dev \
+  liblilv-dev \
+  libsndfile1-dev \
+  libmp3lame-dev \
+  libopus-dev \
+  libopusenc-dev \
+  cmake make pkg-config
+
+git clone https://github.com/djshaji/opiqo-linux.git
+cd opiqo-linux
+cmake --preset linux-default
+cmake --build build-linux -j$(nproc)</code></pre>
+            </div>
+          </div>
+
+          <div class="download-card reveal">
+            <div class="download-card__header">
+              <svg class="download-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              <h3 class="download-card__title">Fedora / RHEL</h3>
+            </div>
+            <div class="download-card__build">
+              <pre><code>sudo dnf install \
+  gtk4-devel \
+  jack-audio-connection-kit-devel \
+  lilv-devel \
+  libsndfile-devel \
+  lame-devel \
+  opus-devel \
+  opusenc-devel \
+  cmake make pkg-config
+
+git clone https://github.com/djshaji/opiqo-linux.git
+cd opiqo-linux
+cmake --preset linux-default
+cmake --build build-linux -j$(nproc)</code></pre>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="download__oss-note reveal">
+          View the source code, report issues, and contribute on
+          <a href="https://github.com/djshaji/opiqo-linux" class="link" target="_blank" rel="noopener noreferrer">GitHub</a> ·
+          <a href="developer.html" class="link">Developer Documentation</a> ·
+          Licensed under the MIT License.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="../index.html" class="navbar__logo" aria-label="Opiqo home">
+          <span class="logo-icon" aria-hidden="true">🎸</span>
+          <span class="logo-text">opiqo</span>
+        </a>
+        <p class="footer__tagline">Professional LV2 Guitar Effects for Every Platform.</p>
+      </div>
+      <nav class="footer__nav" aria-label="Footer navigation">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Linux</h4>
+          <a href="#features" class="footer__link">Features</a>
+          <a href="#architecture" class="footer__link">Architecture</a>
+          <a href="#requirements" class="footer__link">Requirements</a>
+          <a href="#download" class="footer__link">Download</a>
+          <a href="developer.html" class="footer__link">Developer Docs</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Other Platforms</h4>
+          <a href="../android/index.html" class="footer__link">Android</a>
+          <a href="../windows/index.html" class="footer__link">Windows</a>
+          <a href="../index.html" class="footer__link">All Platforms</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Resources</h4>
+          <a href="https://github.com/djshaji/opiqo-linux" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/djshaji/opiqo-linux/issues" class="footer__link" target="_blank" rel="noopener noreferrer">Issue Tracker</a>
+          <a href="https://lv2plug.in/" class="footer__link" target="_blank" rel="noopener noreferrer">LV2 Spec</a>
+          <a href="https://jackaudio.org/" class="footer__link" target="_blank" rel="noopener noreferrer">JACK Audio</a>
+          <a href="https://pipewire.org/" class="footer__link" target="_blank" rel="noopener noreferrer">PipeWire</a>
+        </div>
+      </nav>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>© 2026 Opiqo. Released under the <a href="https://github.com/djshaji/opiqo-linux/blob/main/LICENSE" class="link" target="_blank" rel="noopener noreferrer">MIT License</a>. Made with ♥ for Linux audio enthusiasts. · <a href="../privacy.html" class="link">Privacy Policy</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
